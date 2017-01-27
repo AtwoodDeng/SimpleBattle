@@ -2,20 +2,32 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Move : MonoBehaviour {
+public class Move : HeroComponent {
 
-	public Hero parent;
+	/// <summary>
+	/// Old Interface for moving to target block
+	/// </summary>
+	/// <returns>The to.</returns>
+	/// <param name="target">Target.</param>
+//	public virtual float MoveTo( SimBlock target)
+//	{
+//		if ( parent.isVirtual )
+//			return 0;
+//		float duration = LogicManager.moveDuration;
+//		Block targetBlock = BattleField.GetBlock( target);
+//		parent.transform.DOMove (targetBlock.linkedBlock.GetCenterPosition (), duration);
+//		return duration;
+//	}
 
-	void Awake()
+	public SimBlock[] GetMoveRange( )
 	{
-		if (parent == null)
-			parent = GetComponent<Hero>();
-		if (parent == null && transform.parent != null)
-			parent = transform.parent.GetComponent<Hero> ();
+		return GetMoveRange(parent.TemBlock.SimpleBlock,
+			parent.GetHeroInfo().direction,
+			parent.GetHeroInfo().MoveRange);
 	}
 
-	public virtual float MoveTo( Block target)
+	public virtual SimBlock[] GetMoveRange( SimBlock temBlock , Direction direction, int moveRange)
 	{
-		return LogicManager.moveDuration;
+		return new SimBlock[0];
 	}
 }

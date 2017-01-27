@@ -2,20 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Strategy : MonoBehaviour {
-	public Hero parent;
+public class Strategy : HeroComponent {
 
-	void Awake()
+	public virtual SimBlock GetTarget()
 	{
-		if (parent == null)
-			parent = GetComponent<Hero>();
-		if (parent == null && transform.parent != null)
-			parent = transform.parent.GetComponent<Hero> ();
-	}
-
-	public virtual Block GetTarget()
-	{
-		return parent.TemBlock;
+		return parent.TemBlock.SimpleBlock;
 	}
 
 	public virtual Direction GetDirection()

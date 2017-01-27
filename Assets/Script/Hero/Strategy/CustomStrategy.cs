@@ -4,20 +4,37 @@ using UnityEngine;
 
 public class CustomStrategy : Strategy {
 
-	public Block target;
-	public float angle;
-	public override Block GetTarget ()
-	{
+	public SimBlock target;
+	public float angle{
+		get {
+			return m_angle;
+		}
+		set {
+			m_angle = value;
+			direction = Angle2Direction( m_angle );
+		}
+	}
+	float m_angle;
 
-		if (target.state == Block.BlockState.Empty) {
+	public Direction direction;
+	public override SimBlock GetTarget ()
+	{
+		if (BattleField.GetBlock( target ).state == Block.BlockState.Empty) {
 			return target;
 		}
 
-		return parent.TemBlock;
+		// TODO : remove the else situation
+		return parent.TemBlock.SimpleBlock;
 	}
 
 	public override Direction GetDirection ()
 	{
+		return direction;
+	}
+
+	public Direction Angle2Direction( float angle )
+	{
 		return HeroInfo.Angle2Direction (angle);
 	}
+
 }

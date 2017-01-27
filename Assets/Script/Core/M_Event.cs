@@ -17,6 +17,10 @@ public enum LogicEvents
 
 	SelectBlock = 100,
 	ConfirmHero = 101,
+
+	// ===== network =====
+	NetPlaceHero = 201,
+	NetMoveHero = 202,
 }
 
 public class M_Event : MonoBehaviour {

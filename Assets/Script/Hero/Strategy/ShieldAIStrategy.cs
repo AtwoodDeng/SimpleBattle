@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class ShieldAIStrategy : Strategy {
 
-	public override Block GetTarget ()
+	public override SimBlock GetTarget ()
 	{
 		float[,] scores = new float[BattleField.Instance.gridWidth, BattleField.Instance.gridHeight];
-		Block[] enermyBlocks = BattleField.GetEnermyBlock(parent.GetHeroInfo().teamColor);
+		Block[] enermyBlocks = BattleField.GetEnermyBlock(parent.GetHeroInfo().TeamColor);
 
 		for (int i = 0; i < scores.GetLength (0); ++i) {
 			for (int j = 0; j < scores.GetLength (1); ++j) {
@@ -15,7 +15,7 @@ public class ShieldAIStrategy : Strategy {
 				if (parent.IsInMoveRange (b) && b.state == Block.BlockState.Empty) {
 					scores [i, j] = 0;
 					foreach (Block e in enermyBlocks) {
-						scores [i, j] += 1f / b.GetDistance( e ) / e.linkedBlock.GetHeroInfo ().health;
+						scores [i, j] += 1f / b.GetDistance( e ) / e.linkedBlock.GetHeroInfo ().Health;
 					}
 				} else
 					scores [i, j] = -1f;
@@ -34,7 +34,7 @@ public class ShieldAIStrategy : Strategy {
 			}
 		}
 
-		return target;
+		return target.SimpleBlock;
 
 	}
 }
