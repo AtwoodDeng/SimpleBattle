@@ -9,7 +9,7 @@ public class MegaPassive : Passive {
 	{
 		HistoryStep lastHistory = GetLastStep(HistoryStep.RecordType.StartBattle);
 
-		if ( lastHistory.block.Equals(parent.TemBlock.SimpleBlock) )
+		if ( lastHistory.block.Equals(parent.TemSimpleBlock) )
 		{
 			for( int i = 0 ; i < dmgs.Length ; ++ i )
 			{

@@ -6,7 +6,7 @@ public class Strategy : HeroComponent {
 
 	public virtual SimBlock GetTarget()
 	{
-		return parent.TemBlock.SimpleBlock;
+		return parent.TemSimpleBlock;
 	}
 
 	public virtual Direction GetDirection()

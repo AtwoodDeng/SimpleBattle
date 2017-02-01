@@ -3,8 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Buff {
-
+	public Hero parent;
 	public int remainTurn;
+	public BuffAddType addType;
+
+	public virtual BuffType GetBuffType()
+	{
+		return BuffType.None;
+	}
 
 	public virtual void Update( BuffUpdateType type )
 	{
@@ -16,6 +22,11 @@ public class Buff {
 		default:
 			break;
 		}
+	}
+
+	public virtual void OnRecieveDamage( ref Damage dmg )
+	{
+		
 	}
 
 	public virtual void EndBattle()
@@ -32,10 +43,32 @@ public class Buff {
 	public Buff()
 	{
 		remainTurn = 1;
+		addType = BuffAddType.Mutiple;
 	}
 }
 
 public enum BuffUpdateType
 {
 	EndBattle,
+
+}
+
+public enum BuffType
+{
+	None,
+	SoldierBuff,
+	FireBuff,
+}
+
+public enum BuffAddType
+{
+	// mutiple buff exist
+	Mutiple,
+	// replace the original buff
+	Replace,
+	// if the buff exist, then do nothing
+	Single,
+	// add the exist turn to the buff
+	Add ,
+
 }

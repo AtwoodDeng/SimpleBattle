@@ -68,6 +68,7 @@ public class HeroInfo : HeroComponent
 		}
 	}
 	public TeamColor m_teamColor;
+	public DamageType attackType;
 	public Direction direction;
 	public HeroType type;
 
@@ -116,21 +117,21 @@ public class HeroInfo : HeroComponent
 	{
 		RawHeroInfo res = new RawHeroInfo();
 //		Debug.Log("parent " + parent + " Tem " + parent.TemBlock.m_i + " " + parent.TemBlock.m_j );
-		res.block = parent.TemBlock.SimpleBlock;
+		res.block = parent.TemSimpleBlock;
 		res.ID = ID;
 		res.type = type;
+		res.direction = direction;
+		res.aglie = Agile;
 
 		return res;
 	}
-		
-	#region Buff
-	private List<Buff> buffList;
+
 
 	public void Record( Damage[] dmgs , HistoryStep.RecordType type )
 	{
 		HistoryStep step = new HistoryStep();
 		step.type = type;
-		step.block = new SimBlock(parent.TemBlock.SimpleBlock);
+		step.block = new SimBlock(parent.TemSimpleBlock);
 		step.health = m_health;
 		if ( dmgs == null )
 			step.damages = new Damage[0];
@@ -140,6 +141,9 @@ public class HeroInfo : HeroComponent
 		}
 		history.Add( step );
 	}
+		
+	#region Buff
+	private List<Buff> buffList;
 
 	public Buff GetBuff<T>()
 	{
@@ -155,7 +159,48 @@ public class HeroInfo : HeroComponent
 
 	public void AddBuff( Buff buf )
 	{
-		buffList.Add( buf );
+		buf.parent = parent;
+		if ( buf.addType == BuffAddType.Mutiple )
+		{
+			buffList.Add( buf );
+		}else if ( buf.addType == BuffAddType.Replace )
+		{
+			for( int i = 0 ; i < buffList.Count ; ++ i )
+				if( buffList[i].GetBuffType() == buf.GetBuffType()) {
+					buffList.RemoveAt( i );
+					break;
+				}
+			buffList.Add(buf);
+		}else if ( buf.addType == BuffAddType.Single )
+		{
+			bool exist = false;
+			for( int i = 0 ; i < buffList.Count ; ++ i )
+				if( buffList[i].GetBuffType() == buf.GetBuffType()) {
+					exist = true;
+					break;
+				}
+			if ( !exist )
+				buffList.Add( buf );
+		}else if ( buf.addType == BuffAddType.Add )
+		{
+			bool exist = false;
+			for( int i = 0 ; i < buffList.Count ; ++ i )
+				if( buffList[i].GetBuffType() == buf.GetBuffType()) {
+					exist = true;
+					buffList[i].remainTurn += buf.remainTurn -1;
+					break;
+				}
+			if ( !exist )
+				buffList.Add( buf );
+		}
+	}
+
+	public void RecieveDamage( ref Damage dmg )
+	{
+		foreach( Buff b in buffList )
+		{
+			b.OnRecieveDamage( ref dmg );
+		}
 	}
 
 	public void UpdateBuff( BuffUpdateType updateType )
@@ -182,6 +227,13 @@ public class HeroInfo : HeroComponent
 	{
 		if (!IsDead) {
 			Health -= Mathf.Clamp (dmg.damage , 0, 99999f);
+			if ( dmg.buffs != null )
+			{
+				foreach( Buff b in dmg.buffs )
+				{
+					AddBuff( b );
+				}
+			}
 			if (Health <= 0) {
 				DeathFunc ();
 			}
@@ -230,6 +282,7 @@ public class RawHeroInfo
 	public int m_i;
 	public int m_j;
 	public float aglie;
+	public Direction direction;
 
 	public RawHeroInfo Copy()
 	{
@@ -238,12 +291,14 @@ public class RawHeroInfo
 		res.ID = ID;
 		res.block = block;
 		res.aglie = aglie;
+		res.direction = direction;
 		return res;
 	}
 
 	public override string ToString ()
 	{
-		return string.Format ("ID: {2}, type: {3} , block:({0},{1})", m_i , m_j , ID , type.ToString());
+		return string.Format ("ID: {2}, type: {3} , block:({0},{1}) , direction {4}, aglie {5}",
+			m_i , m_j , ID , type.ToString() , direction , aglie );
 	}
 
 }
@@ -309,18 +364,28 @@ public class HistoryStep
 public class Damage
 {
 	public float damage;
+	public DamageType type;
 	public bool IsHeal
 	{
 		get { return damage < 0 ; }
 	}
 	public HeroInfo caster;
 	public SimBlock target;
-	public Damage( float _d , HeroInfo _c , SimBlock _t )
+	public Buff[] buffs;
+	public Damage( float _d , DamageType _type , HeroInfo _c , SimBlock _t )
 	{
 		damage = _d;
 		caster = _c;
 		target = _t;
+		type = _type;
 	}
+}
+
+public enum DamageType
+{
+	Physics,
+	Magic,
+	FireBuff,
 }
 
 public enum TeamColor

@@ -23,8 +23,8 @@ public class SimpleHero : InteractableHero {
 	}
 
 
-	SpriteRenderer targetLine;
-	SpriteRenderer targetArrow;
+	[SerializeField] SpriteRenderer targetLine;
+	[SerializeField] SpriteRenderer targetArrow;
 
 	protected BoxCollider m_collider;
 	protected AStateMachine<HeroState,LogicEvents> m_stateMachine;
@@ -51,11 +51,20 @@ public class SimpleHero : InteractableHero {
 			if ( sprite.name.Equals("targetArrow" ))
 				targetArrow = sprite;
 		}
+
+		InitStateMachine();
+
+		oritinalPos = transform.position;
+		m_collider = GetComponent<BoxCollider> ();
 	}
 
 
+	bool IsStateMachineInited = false;
 	void InitStateMachine()
 	{
+		if ( IsStateMachineInited ) return;
+		IsStateMachineInited = true;
+
 		m_stateMachine = new AStateMachine<HeroState, LogicEvents> (HeroState.None);
 
 		m_stateMachine.BlindFromEveryState (LogicEvents.PlaceHeroPhase, HeroState.ReadyToPlace);
@@ -77,8 +86,7 @@ public class SimpleHero : InteractableHero {
 		});
 
 		m_stateMachine.AddEnter (HeroState.Prepare, delegate {
-			if ( TriggerBlock != null )
-			{
+			if ( TriggerBlock != null ) {
 				TriggerBlock.RegisterHero (this);
 
 				TemBlock = TriggerBlock.BlockInfo;
@@ -121,7 +129,7 @@ public class SimpleHero : InteractableHero {
 			{
 				Block block = (Block)arg.GetMessage(M_Event.BLOCK);
 
-				if ( TemBlock.GetDistance( block ) <= GetHeroInfo().MoveRange )
+				if ( m_move.IsInMoveRange( block.SimpleBlock ) )
 				{
 					((CustomStrategy)m_strategy).target = block.SimpleBlock;
 					DrawToTarget( block );
@@ -157,7 +165,7 @@ public class SimpleHero : InteractableHero {
 			if ( TemBlock == null )
 				m_stateMachine.State = HeroState.None;
 			if ( m_strategy is CustomStrategy )
-				((CustomStrategy)m_strategy).target = TemBlock.SimpleBlock;
+				((CustomStrategy)m_strategy).target = TemSimpleBlock;
 //			TemBlock.linkedBlock.BackgroundSetColor(Color.gray);	
 
 		});
@@ -281,9 +289,9 @@ public class SimpleHero : InteractableHero {
 		return base.BattleAttack ();
 	}
 
-	void OnGUI()
-	{
-		GUILayout.Label ("");
-		GUILayout.Label ("State " + m_stateMachine.State);
-	}
+//	void OnGUI()
+//	{
+//		GUILayout.Label ("");
+//		GUILayout.Label ("State " + m_stateMachine.State);
+//	}
 }

@@ -8,7 +8,7 @@ public class Global {
 		switch( team )
 		{
 			case TeamColor.Red:
-				return Color.Lerp( Color.red , Color.white , 0.25f );
+			return Color.Lerp( Color.yellow , Color.white , 0.25f );
 			case TeamColor.Blue:
 				return Color.Lerp( Color.blue , Color.white , 0.25f );
 			default:

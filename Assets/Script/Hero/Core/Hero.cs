@@ -31,6 +31,14 @@ public class Hero : MBehavior {
 		}
 	}
 	[SerializeField] protected Block m_temBlock;
+	public SimBlock TemSimpleBlock
+	{
+		get {
+			if ( TemBlock == null )
+				return new SimBlock( -1 , -1 );
+			return TemBlock.SimpleBlock;
+		}
+	}
 	Block targetBlock;
 	Direction targetDirection;
 
@@ -159,8 +167,9 @@ public class Hero : MBehavior {
 
 		if ( m_heroAnim != null )
 		{
-			BattleField.ShowBlock( new SimBlock[]{ TemBlock.SimpleBlock } , BattleBlock.BlockVisualType.BattleAttackHero );
 			BattleField.ShowBlock( m_attack.GetAttackRange() , BattleBlock.BlockVisualType.BattleAttackRange );
+			BattleField.ShowBlock( m_attack.GetTargetBlock() , BattleBlock.BlockVisualType.BattleAttackTarget , false);
+			BattleField.ShowBlock( new SimBlock[]{ TemSimpleBlock } , BattleBlock.BlockVisualType.BattleAttackHero , false);
 			// the damage will be sent during the animation
 			return m_heroAnim.Attack( dmgs );
 		}else{
@@ -205,6 +214,7 @@ public class Hero : MBehavior {
 
 	public void RecieveDamage( Damage dmg )
 	{
+		GetHeroInfo().RecieveDamage( ref dmg );
 		m_passive.RecieveDamage( ref dmg );
 		GetHeroInfo().RecieveDamage( dmg );
 	}
@@ -216,33 +226,33 @@ public class Hero : MBehavior {
 		
 	}
 
-	public bool IsInAttackRange( Block b )
-	{
-		int attackRange = GetHeroInfo ().AttackRange;
-		if (b != null && TemBlock != null) {
-			if (TemBlock.GetDistance (b) <= attackRange)
-				return true;
-		}
-
-		return false;
-	}
-
-	public bool IsInMoveRange( Block b )
-	{
-		int moveRange = GetHeroInfo ().MoveRange;
-		if (b != null && TemBlock != null) {
-			if (TemBlock.GetDistance (b) <= moveRange)
-				return true;
-		}
-
-		return false;
-	}
+//	public bool IsInAttackRange( Block b )
+//	{
+//		int attackRange = GetHeroInfo ().AttackRange;
+//		if (b != null && TemBlock != null) {
+//			if (TemBlock.GetDistance (b) <= attackRange)
+//				return true;
+//		}
+//
+//		return false;
+//	}
+//
+//	public bool IsInMoveRange( Block b )
+//	{
+//		int moveRange = GetHeroInfo ().MoveRange;
+//		if (b != null && TemBlock != null) {
+//			if (TemBlock.GetDistance (b) <= moveRange)
+//				return true;
+//		}
+//
+//		return false;
+//	}
 
 	public HeroMoveInfo GetMoveInfo()
 	{
 		HeroMoveInfo res = new HeroMoveInfo();
 		res.ID = GetHeroInfo().ID;
-		res.ori = TemBlock.SimpleBlock;
+		res.ori = TemSimpleBlock;
 		res.target = m_strategy.GetTarget();
 		res.toDirection = m_strategy.GetDirection();
 		res.type = GetHeroInfo().type;

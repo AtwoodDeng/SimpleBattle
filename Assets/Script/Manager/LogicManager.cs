@@ -76,8 +76,8 @@ public class LogicManager : MBehavior {
 				List<HeroMoveInfo> heros = new List<HeroMoveInfo>();
 				foreach( Hero h in heroList )
 				{
-					if ( h.GetHeroInfo().TeamColor == TeamColor.Blue )
-						heros.Add( h.GetMoveInfo());
+					if ( h.GetHeroInfo().TeamColor == TeamColor.Blue && !h.GetHeroInfo().IsDead)
+						heros.Add( h.GetMoveInfo() );
 				}
 				Debug.Log("Send Move Hero");
 				NetworkManager.Instance.SendMoveHero( heros.ToArray() );
@@ -89,6 +89,9 @@ public class LogicManager : MBehavior {
 		m_stateMachine.AddEnter (State.Battle, OnBattle);
 
 		m_stateMachine.AddEnter (State.Count, delegate {
+
+
+
 			m_stateMachine.State = State.Strategy;	
 		});
 
@@ -235,6 +238,7 @@ public class LogicManager : MBehavior {
 			foreach( RawHeroInfo hInfo in msg.heroInfo )
 			{
 				hInfo.block = BattleField.GetReflectBlock( hInfo.block );
+				hInfo.direction = BattleField.GetReflectDirection( hInfo.direction );
 				HeroFactory.SetUpEnemyHero( hInfo );
 			}
 			m_stateMachine.State = State.Strategy;

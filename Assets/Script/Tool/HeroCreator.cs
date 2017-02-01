@@ -36,16 +36,19 @@ public class HeroCreator : MBehavior {
 		return res;
 	}
 
+	int index = 0;
 	public void OnLeft()
 	{
 		int Length = System.Enum.GetNames(typeof(HeroType)).Length;
-		TemHeroType = (HeroType) ( (int)(TemHeroType - 1 + Length ) % Length);
+		index = ( index - 1 + Length ) % Length;
+		TemHeroType = (HeroType)System.Enum.Parse( typeof(HeroType) , System.Enum.GetNames(typeof(HeroType))[index] );
 	}
 
 	public void OnRight()
 	{
 		int Length = System.Enum.GetNames(typeof(HeroType)).Length;
-		TemHeroType = (HeroType) ( (int)(TemHeroType + 1 + Length) % Length );
+		index = ( index + 1 + Length ) % Length;
+		TemHeroType = (HeroType)System.Enum.Parse( typeof(HeroType) , System.Enum.GetNames(typeof(HeroType))[index] );
 	}
 
 	public void OnCreate()

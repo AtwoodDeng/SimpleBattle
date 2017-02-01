@@ -69,6 +69,10 @@ public class SoldierPassive : Passive {
 public class SoliderAttackBuff : Buff
 {
 	float AttackIncrease = 0;
+	public override BuffType GetBuffType ()
+	{
+		return BuffType.SoldierBuff;
+	}
 
 	public override float GetAttack ()
 	{

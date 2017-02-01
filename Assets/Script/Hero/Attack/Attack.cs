@@ -15,7 +15,7 @@ public class Attack : HeroComponent {
 
 	public SimBlock[] GetAttackRange( )
 	{
-		return GetAttackRange(parent.TemBlock.SimpleBlock,
+		return GetAttackRange(parent.TemSimpleBlock,
 			parent.GetHeroInfo().direction,
 			parent.GetHeroInfo().AttackRange);
 	}
@@ -71,7 +71,7 @@ public class Attack : HeroComponent {
 
 	public virtual Damage GetDamage( HeroInfo myInfo , SimBlock targetBlock )
 	{
-		return new Damage (myInfo.Attack, myInfo , targetBlock);
+		return new Damage (myInfo.Attack, myInfo.attackType , myInfo , targetBlock);
 	}
 
 	/// <summary>
@@ -84,5 +84,16 @@ public class Attack : HeroComponent {
 		if (block.linkedBlock != null && block.linkedBlock.GetHeroInfo () != null && block.state == Block.BlockState.Hero) {
 			block.linkedBlock.GetHeroInfo ().RecieveDamage (dmg);
 		}
+	}
+
+
+	public bool IsInAttackRange( SimBlock block )
+	{
+		foreach( SimBlock b in GetAttackRange())
+		{
+			if ( b.Equals( block ))
+				return true;
+		}
+		return false;
 	}
 }

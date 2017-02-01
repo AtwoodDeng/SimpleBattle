@@ -24,7 +24,7 @@ public class CustomStrategy : Strategy {
 		}
 
 		// TODO : remove the else situation
-		return parent.TemBlock.SimpleBlock;
+		return parent.TemSimpleBlock;
 	}
 
 	public override Direction GetDirection ()

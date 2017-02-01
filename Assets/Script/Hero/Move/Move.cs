@@ -21,7 +21,7 @@ public class Move : HeroComponent {
 
 	public SimBlock[] GetMoveRange( )
 	{
-		return GetMoveRange(parent.TemBlock.SimpleBlock,
+		return GetMoveRange(parent.TemSimpleBlock,
 			parent.GetHeroInfo().direction,
 			parent.GetHeroInfo().MoveRange);
 	}
@@ -30,4 +30,15 @@ public class Move : HeroComponent {
 	{
 		return new SimBlock[0];
 	}
+
+	public bool IsInMoveRange( SimBlock block )
+	{
+		foreach( SimBlock b in GetMoveRange())
+		{
+			if ( b.Equals( block ))
+				return true;
+		}
+		return false;
+	}
+
 }

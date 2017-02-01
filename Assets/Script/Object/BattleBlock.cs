@@ -21,6 +21,12 @@ public class BattleBlock : MonoBehaviour {
 		BattleAttackHero,
 		// in battle, when attack, shows the attack range
 		BattleAttackRange,
+		// in battle, when attack, shows the attack range
+		BattleAttackTarget,
+		// EnermyMoveRange,
+		MoveRangeEnermy,
+		// attack range of enermy
+		AttackRangeEnermy,
 
 	}
 	BlockVisualType m_visualType;
@@ -44,11 +50,17 @@ public class BattleBlock : MonoBehaviour {
 				case BlockVisualType.BattleAttackRange:
 					BackgroundSetColor(colorSetting.BattleAttackRange);
 					break;
+				case BlockVisualType.MoveRangeEnermy:
+					BackgroundSetColor(colorSetting.BattleMoveRangeEnermy);
+					break;
+				case BlockVisualType.AttackRangeEnermy:
+					BackgroundSetColor(colorSetting.BattleAttackRangeEnermy);
+					break;
 				default:
 					break;
 				}
 			}
-			if (  m_block.state == Block.BlockState.Hero )
+			else if (  m_block.state == Block.BlockState.Hero )
 			{
 				switch( value )
 				{
@@ -71,12 +83,22 @@ public class BattleBlock : MonoBehaviour {
 					BackgroundSetColor(colorSetting.BattleAttackHero);
 					break;
 				case BlockVisualType.BattleAttackRange:
+					BackgroundSetColor(colorSetting.BattleAttackRange);
+					break;
+				case BlockVisualType.BattleAttackTarget:
 					BackgroundSetColor(colorSetting.BattleAttackRangeHero);
+					break;
+				case BlockVisualType.MoveRangeEnermy:
+					BackgroundSetColor(colorSetting.BattleMoveRangeEnermy);
+					break;
+				case BlockVisualType.AttackRangeEnermy:
+					BackgroundSetColor(colorSetting.BattleAttackRangeEnermy);
 					break;
 				default:
 					break;
 				};
 			}
+
 		}
 	}
 	[System.Serializable]
@@ -91,6 +113,8 @@ public class BattleBlock : MonoBehaviour {
 		public Color BattleAttackHero;
 		public Color BattleAttackRange;
 		public Color BattleAttackRangeHero;
+		public Color BattleMoveRangeEnermy;
+		public Color BattleAttackRangeEnermy;
 	};
 	[SerializeField] BlockColorSetting colorSetting;
 

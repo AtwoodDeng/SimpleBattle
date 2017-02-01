@@ -8,6 +8,7 @@ public class NetworkManager : MBehavior {
 	static NetworkManager s_Instance;
 	public static NetworkManager Instance{ get { return s_Instance; }}
 	public NetworkManager(){ s_Instance = this; }
+	public bool mirror = false;
 
 	NetworkClient client;
 	int port = 7777;
@@ -56,19 +57,26 @@ public class NetworkManager : MBehavior {
 			foreach( PlaceHeroMessage phMsg in placeHeroMsgList ) {
 				foreach( int clientID in clients ) {
 					// TODO : CHANGE TO != 
-					if ( clientID != phMsg.senderID ) {
-//					#region test
-//					if ( clientID == phMsg.senderID ) {
-//						msg.senderID = 2;
-//						foreach( RawHeroInfo h in phMsg.heroInfo ) {
-//							h.ID += 1000;
-//						}
-//					#endregion
-						Debug.Log("Send MSg from " + phMsg.senderID + " to " + clientID );
-						NetworkServer.SendToClient( clientID , (short)MyMsgType.PlaceHeroRecieve , phMsg );
+					if ( mirror )
+					{
+						if ( clientID == phMsg.senderID ) {
+							msg.senderID = 2;
+							foreach( RawHeroInfo h in phMsg.heroInfo ) {
+								h.ID += 1000;
+							}
+
+							NetworkServer.SendToClient( clientID , (short)MyMsgType.PlaceHeroRecieve , phMsg );
+						}
+					}else{
 					}
+						if ( clientID != phMsg.senderID ) {
+						Debug.Log("Send " + phMsg.senderID + " to " + clientID);
+							NetworkServer.SendToClient( clientID , (short)MyMsgType.PlaceHeroRecieve , phMsg );
+						}
 				}
 			}
+
+			placeHeroMsgList.Clear();
 		}
 	}
 
@@ -77,6 +85,7 @@ public class NetworkManager : MBehavior {
 		Debug.Log("On Server Move Hero");
 		MoveHeroMessage msg = netMsg.ReadMessage<MoveHeroMessage>();
 
+		Debug.Log("Recieve Move from " + msg.senderID );
 		moveHeroMsgList.Add( msg );
 
 		if ( moveHeroMsgList.Count >= clients.Count )
@@ -84,18 +93,25 @@ public class NetworkManager : MBehavior {
 			foreach( MoveHeroMessage mMsg in moveHeroMsgList ) {
 				foreach( int clientID in clients ) {
 					// TODO : CHANGE TO != 
+					if ( mirror )
+					{
+						if ( clientID == mMsg.senderID ) {
+							msg.senderID = 2;
+							foreach( HeroMoveInfo h in mMsg.heroMoves ) {
+								h.ID += 1000;
+							}
+							NetworkServer.SendToClient( clientID , (short)MyMsgType.MoveHeroRecieve , mMsg );
+						}
+					}else {
+					}
 					if ( clientID != mMsg.senderID ) {
-//					#region test
-//					if ( clientID == mMsg.senderID ) {
-//						msg.senderID = 2;
-//						foreach( HeroMoveInfo h in mMsg.heroMoves ) {
-//							h.ID += 1000;
-//						}
-//					#endregion
+						Debug.Log("Send Msg From " + mMsg.senderID + " to " + clientID );
 						NetworkServer.SendToClient( clientID , (short)MyMsgType.MoveHeroRecieve , mMsg );
 					}
 				}
 			}
+
+			moveHeroMsgList.Clear();
 		}
 	}
 
@@ -136,7 +152,10 @@ public class NetworkManager : MBehavior {
 		msg.senderID = clientID;
 		msg.heroInfo = new RawHeroInfo[heros.Length];
 		for( int i = 0 ; i < msg.heroInfo.Length ; ++ i )
+		{
 			msg.heroInfo[i] = heros[i].Copy();
+			Debug.Log("Send " + msg.heroInfo[i].ToString());
+		}
 		if ( client != null )
 			client.Send( (short) MyMsgType.PlaceHeroSend , msg );
 	}
@@ -148,6 +167,10 @@ public class NetworkManager : MBehavior {
 		arg.AddMessage( "msg" , msg );
 		M_Event.FireLogicEvent(LogicEvents.NetPlaceHero , arg );
 
+		for( int i = 0 ; i < msg.heroInfo.Length ; ++ i )
+		{
+			Debug.Log("Recieve " + msg.heroInfo[i].ToString());
+		}
 	}
 
 	public void SendMoveHero( HeroMoveInfo[] heros )

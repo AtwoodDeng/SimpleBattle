@@ -10,6 +10,7 @@ public class HeroFactory {
 		SimpleHero hero = heroObj.AddComponent<SimpleHero>();
 
 		hero.Init();
+		hero.GetHeroInfo().direction = Direction.Right;
 		hero.GetHeroInfo().TeamColor = TeamColor.Blue;
 
 		return hero;
@@ -22,6 +23,7 @@ public class HeroFactory {
 		NetworkHero hero = heroObj.AddComponent<NetworkHero>();
 
 		hero.Init( rInfo );
+		hero.GetHeroInfo().direction = rInfo.direction;
 		hero.GetHeroInfo().TeamColor = TeamColor.Red;
 
 		return hero;
@@ -39,8 +41,11 @@ public class HeroFactory {
 
 public enum HeroType
 {
-	Arrow,
-	Mega,
-	Soldier,
-	Soul
+	Arrow = 1,
+	Mega = 2,
+	Soldier = 3,
+//	Soul = 4,
+	Sword = 5,
+	Fire = 6 ,
+	Thief = 7,
 }

@@ -9,7 +9,7 @@ public class ArrowPassive : Passive {
 	public override bool DoChangeDamageOnAttack (ref Damage[] dmgs)
 	{
 		SimBlock[] enermys = BattleField.GetEnermyBlockSim( parent.GetHeroInfo().TeamColor );
-		SimBlock temBlock = parent.TemBlock.SimpleBlock;
+		SimBlock temBlock = parent.TemSimpleBlock;
 
 		bool isBlocked = false;
 		foreach( SimBlock b in enermys ) {
