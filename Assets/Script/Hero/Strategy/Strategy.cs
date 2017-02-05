@@ -13,4 +13,9 @@ public class Strategy : HeroComponent {
 	{
 		return Direction.Left;
 	}
+
+	public virtual bool GetActive()
+	{
+		return true;
+	}
 }

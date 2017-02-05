@@ -133,7 +133,6 @@ public class SimpleHero : InteractableHero {
 				{
 					((CustomStrategy)m_strategy).target = block.SimpleBlock;
 					DrawToTarget( block );
-
 					m_stateMachine.State = HeroState.StrategyDirection;
 				}
 			}
@@ -157,33 +156,42 @@ public class SimpleHero : InteractableHero {
 				{
 					m_stateMachine.State = HeroState.StrategyChoose;
 				}
+			}else if ( arg.type == LogicEvents.ConfirmMove ) {
+				if ( LogicManager.Instance.mode == LogicManager.Mode.SingleBattle ) {
+					if ( arg.sender != this )
+						m_stateMachine.State = HeroState.Strategy;
+				}
 			}
 		});
 
 		m_stateMachine.AddEnter (HeroState.Strategy, delegate {
-//			targetBlock = TemBlock;
 			if ( TemBlock == null )
 				m_stateMachine.State = HeroState.None;
 			if ( m_strategy is CustomStrategy )
 				((CustomStrategy)m_strategy).target = TemSimpleBlock;
-//			TemBlock.linkedBlock.BackgroundSetColor(Color.gray);	
+
+			targetLine.enabled = false;
+			targetArrow.enabled = false;
+
+			((CustomStrategy)m_strategy).isActive = false;	
 
 		});
 
 		m_stateMachine.AddEnter (HeroState.StrategyChoose, delegate {
-//			TemBlock.linkedBlock.BackgroundSetColor(Color.yellow);	
 			TemBlock.linkedBlock.visualType = BattleBlock.BlockVisualType.StrategyFocus;
-//			BattleField.ShowWalkable( TemBlock , GetHeroInfo().moveRange );
-			BattleField.ShowBlock( m_move.GetMoveRange() , BattleBlock.BlockVisualType.MoveRange );
+			BattleField.ShowBlock( m_move.GetMoveRange() , BattleBlock.BlockVisualType.StrategyMoveRange );
+			BattleField.ShowBlock( new SimBlock[]{ TemBlock.SimpleBlock} , BattleBlock.BlockVisualType.StrategyChosenHero , false );
 		});
 
 		m_stateMachine.AddEnter (HeroState.StrategyDirection, delegate() {
 			targetArrow.enabled = true;
 			Block block = BattleField.GetBlock( ((CustomStrategy)m_strategy).target );
+			BattleField.ShowBlock( new SimBlock[]{ TemBlock.SimpleBlock} , BattleBlock.BlockVisualType.StrategyChosenHero , false );
 			targetArrow.transform.position = block.linkedBlock.GetCenterPosition();
 		});
 
 		m_stateMachine.AddUpdate (HeroState.StrategyDirection, delegate {
+			// set the target arrow to right angle
 			Vector3 focusPos = InputManager.FocusWorldPos;
 			Block block = BattleField.GetBlock( ((CustomStrategy)m_strategy).target );
 			Vector3 toward = focusPos - block.linkedBlock.GetCenterPosition();
@@ -192,11 +200,20 @@ public class SimpleHero : InteractableHero {
 
 			targetArrow.transform.rotation = Quaternion.Euler( 0 , 0 , angle );
 
+			// set the angle of strategy
 			((CustomStrategy)m_strategy).angle = angle;
 
+			// get the direction of the strategy
 			Direction direction = ((CustomStrategy)m_strategy).GetDirection();
-			BattleField.ShowBlock( m_attack.GetAttackRange( ((CustomStrategy)m_strategy).target , direction , GetHeroInfo().AttackRange ) , BattleBlock.BlockVisualType.AttackRange);
+			BattleField.ShowBlock( m_attack.GetAttackRange( ((CustomStrategy)m_strategy).target , direction , GetHeroInfo().AttackRange ) , BattleBlock.BlockVisualType.StrategyAttackRange);
 
+		});
+
+		m_stateMachine.AddExit (HeroState.StrategyDirection, delegate {
+			((CustomStrategy)m_strategy).isActive = true;	
+			LogicArg arg = new LogicArg(this);
+			Debug.Log("Fire Confirm Move ");
+			M_Event.FireLogicEvent(LogicEvents.ConfirmMove , arg );
 		});
 
 		m_stateMachine.AddEnter (HeroState.StrategyConfirm, delegate {
@@ -289,9 +306,9 @@ public class SimpleHero : InteractableHero {
 		return base.BattleAttack ();
 	}
 
-//	void OnGUI()
-//	{
-//		GUILayout.Label ("");
-//		GUILayout.Label ("State " + m_stateMachine.State);
-//	}
+	void OnGUI()
+	{
+		GUILayout.Label ("");
+		GUILayout.Label ("State " + m_stateMachine.State);
+	}
 }

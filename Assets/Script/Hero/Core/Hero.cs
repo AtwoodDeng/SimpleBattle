@@ -110,6 +110,9 @@ public class Hero : MBehavior {
 	{
 		if ( m_passive != null )
 			m_passive.BeginBattle();
+
+		if ( m_strategy != null )
+			GetHeroInfo().isActive = m_strategy.GetActive();
 	}
 
 	/// <summary>
@@ -171,7 +174,7 @@ public class Hero : MBehavior {
 			BattleField.ShowBlock( m_attack.GetTargetBlock() , BattleBlock.BlockVisualType.BattleAttackTarget , false);
 			BattleField.ShowBlock( new SimBlock[]{ TemSimpleBlock } , BattleBlock.BlockVisualType.BattleAttackHero , false);
 			// the damage will be sent during the animation
-			return m_heroAnim.Attack( dmgs );
+			return m_heroAnim.Attack( dmgs , m_attack.GetTargetBlock() , m_attack.GetAttackRange() );
 		}else{
 			foreach( Damage d in dmgs )
 			{
@@ -198,6 +201,8 @@ public class Hero : MBehavior {
 		GetHeroInfo().UpdateBuff(BuffUpdateType.EndBattle);
 
 		GetHeroInfo().Record( null , HistoryStep.RecordType.EndBattle );
+
+		GetHeroInfo().isActive = false;
 
 	}
 
@@ -256,6 +261,7 @@ public class Hero : MBehavior {
 		res.target = m_strategy.GetTarget();
 		res.toDirection = m_strategy.GetDirection();
 		res.type = GetHeroInfo().type;
+		res.isActive = m_strategy.GetActive();
 		return res;
 	}
 }

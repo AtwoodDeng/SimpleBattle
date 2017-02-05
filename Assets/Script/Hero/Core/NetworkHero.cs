@@ -64,6 +64,7 @@ public class NetworkHero : InteractableHero {
 			if ( m_strategy is CustomStrategy ) {
 				((CustomStrategy)m_strategy).target = info.target ;
 				((CustomStrategy)m_strategy).direction = info.toDirection;
+				((CustomStrategy)m_strategy).isActive = info.isActive;
 			}
 		}
 	}
@@ -97,10 +98,10 @@ public class NetworkHero : InteractableHero {
 		M_Event.UnRegisterAll (OnEvent);
 	}
 
-	void OnGUI()
-	{
-		GUILayout.Label ("");
-		GUILayout.Label ("State " + m_stateMachine.State);
-	}
+//	void OnGUI()
+//	{
+//		GUILayout.Label ("");
+//		GUILayout.Label ("State " + m_stateMachine.State);
+//	}
 
 }

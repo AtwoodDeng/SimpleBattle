@@ -17,6 +17,7 @@ public enum LogicEvents
 
 	SelectBlock = 100,
 	ConfirmHero = 101,
+	ConfirmMove = 102,
 
 	// ===== network =====
 	NetPlaceHero = 201,

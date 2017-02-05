@@ -19,7 +19,7 @@ public class HeroAnim : HeroComponent {
 	/// <returns>The animation time</returns>
 	/// <param name="blocks"> the target blocks</param>
 	/// 
-	public virtual float Attack( Damage[] damges )
+	public virtual float Attack( Damage[] damges , SimBlock[] targets, SimBlock[] attackRange )
 	{
 		return 0;
 	}

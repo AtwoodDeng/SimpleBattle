@@ -15,6 +15,13 @@ public class LogicManager : MBehavior {
 	public static float attackDuration = 1f;
 	public static float attackInterval = 0.1f;
 
+	public enum Mode
+	{
+		AllBattle,
+		SingleBattle,
+	}
+	public Mode mode;
+
 	public enum State
 	{
 		None,
@@ -134,49 +141,101 @@ public class LogicManager : MBehavior {
 
 	IEnumerator DoBattle()
 	{
-		Hero[] list = GetSortedHeroList ();
-//		Debug.Log ("List Length" + list.Length);
+		if ( mode == Mode.AllBattle )
+		{
+			Hero[] list = GetSortedHeroList ();
+	//		Debug.Log ("List Length" + list.Length);
 
-		// Begin
-		for (int i = 0; i < list.Length; ++i) {
-			list [i].BeginBattle ();
-		}
-
-		BattleField.ResetLock();
-		// Strategy
-		for (int i = 0; i < list.Length; ++i) {
-			list [i].BattleTarget ();
-		}
-
-		// Move
-		for (int i = 0; i < list.Length; ++i) {
-			float duration = list [i].BattleMove ();
-			yield return new WaitForSeconds (duration + moveInterval);
-			list[i].EndMove();
-		}
-
-		yield return new WaitForSeconds( 0.5f );
-
-		// Battle
-		for (int i = 0; i < list.Length; ++i) {
-			if (!list [i].GetHeroInfo ().IsDead) {
-//				Debug.Log ("Begin Attack " + list [i].name);
-				float duration = list [i].BattleAttack ();
-				yield return new WaitForSeconds (duration + attackInterval);
-				list[i].EndAttack();
+			// Begin
+			for (int i = 0; i < list.Length; ++i) {
+				list [i].BeginBattle ();
 			}
-		}
 
-		// End
-		for (int i = 0; i < list.Length; ++i) {
-			if (!list [i].GetHeroInfo ().IsDead) {
-				list[i].EndBattle();
+			BattleField.ResetLock();
+			// Strategy
+			for (int i = 0; i < list.Length; ++i) {
+				list [i].BattleTarget ();
 			}
+
+			// Move
+			for (int i = 0; i < list.Length; ++i) {
+				float duration = list [i].BattleMove ();
+				yield return new WaitForSeconds (duration + moveInterval);
+				list[i].EndMove();
+			}
+
+			yield return new WaitForSeconds( 0.5f );
+
+			// Battle
+			for (int i = 0; i < list.Length; ++i) {
+				if (!list [i].GetHeroInfo ().IsDead) {
+	//				Debug.Log ("Begin Attack " + list [i].name);
+					float duration = list [i].BattleAttack ();
+					yield return new WaitForSeconds (duration + attackInterval);
+					list[i].EndAttack();
+				}
+			}
+
+			// End
+			for (int i = 0; i < list.Length; ++i) {
+				if (!list [i].GetHeroInfo ().IsDead) {
+					list[i].EndBattle();
+				}
+			}
+
+			yield return new WaitForSeconds( 0.5f );
+
+			m_stateMachine.State = State.Count;
+		}else if ( mode == Mode.SingleBattle )
+		{
+			Hero[] list = GetSortedHeroList();
+
+			// Begin
+			for (int i = 0; i < list.Length; ++i) {
+				list [i].BeginBattle ();
+			}
+
+			BattleField.ResetLock();
+			// Strategy
+			for (int i = 0; i < list.Length; ++i) {
+				if ( list[i].GetHeroInfo().isActive )
+					list [i].BattleTarget ();
+			}
+
+			// Move
+			for (int i = 0; i < list.Length; ++i) {
+				if ( list[i].GetHeroInfo().isActive ) {
+					float duration = list [i].BattleMove ();
+					yield return new WaitForSeconds (duration + moveInterval);
+					list[i].EndMove();
+				}
+			}
+
+			yield return new WaitForSeconds( 0.5f );
+
+			// Battle
+			for (int i = 0; i < list.Length; ++i) {
+				if ( list[i].GetHeroInfo().isActive ) {
+					if (!list [i].GetHeroInfo ().IsDead) {
+						//				Debug.Log ("Begin Attack " + list [i].name);
+						float duration = list [i].BattleAttack ();
+						yield return new WaitForSeconds (duration + attackInterval);
+						list[i].EndAttack();
+					}
+				}
+			}
+
+			// End
+			for (int i = 0; i < list.Length; ++i) {
+				if (!list [i].GetHeroInfo ().IsDead) {
+					list[i].EndBattle();
+				}
+			}
+
+			yield return new WaitForSeconds( 0.5f );
+
+			m_stateMachine.State = State.Count;
 		}
-
-		yield return new WaitForSeconds( 0.5f );
-
-		m_stateMachine.State = State.Count;
 	}
 
 	Hero[] GetSortedHeroList()

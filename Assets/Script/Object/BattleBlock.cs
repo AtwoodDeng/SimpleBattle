@@ -9,10 +9,12 @@ public class BattleBlock : MonoBehaviour {
 	public enum BlockVisualType
 	{
 		Normal,
+		// showing the chosen hero in the strategy phase
+		StrategyChosenHero,
 		// showing move range on this block
-		MoveRange,
+		StrategyMoveRange,
 		// showing attack range on this block
-		AttackRange,
+		StrategyAttackRange,
 		// focuse on a hero, then the hero's block will change to this 
 		StrategyFocus,
 		// confirm a hero's move, then the hero's block will change to this 
@@ -41,10 +43,10 @@ public class BattleBlock : MonoBehaviour {
 				case BlockVisualType.Normal:
 						RefreshColorByBlock();
 					break;
-				case BlockVisualType.AttackRange:
+				case BlockVisualType.StrategyAttackRange:
 					BackgroundSetColor(colorSetting.AttackColor);
 					break;
-				case BlockVisualType.MoveRange:
+				case BlockVisualType.StrategyMoveRange:
 					BackgroundSetColor(colorSetting.MoveRangeColor);
 					break;
 				case BlockVisualType.BattleAttackRange:
@@ -64,13 +66,17 @@ public class BattleBlock : MonoBehaviour {
 			{
 				switch( value )
 				{
+
 				case BlockVisualType.Normal:
 					RefreshColorByBlock();
 					break;
-				case BlockVisualType.AttackRange:
+				case BlockVisualType.StrategyChosenHero:
+					BackgroundSetColor( colorSetting.ChosenHeroColor );
+					break;
+				case BlockVisualType.StrategyAttackRange:
 					BackgroundSetColor(colorSetting.AttackColor);
 					break;
-				case BlockVisualType.MoveRange:
+				case BlockVisualType.StrategyMoveRange:
 					BackgroundSetColor(colorSetting.MoveRangeColor);
 					break;
 				case BlockVisualType.StrategyFocus:
@@ -106,6 +112,7 @@ public class BattleBlock : MonoBehaviour {
 	{
 		public Color EmptyColor;
 		public Color HeroColor;
+		public Color ChosenHeroColor;
 		public Color MoveRangeColor;
 		public Color AttackColor;
 		public Color StrategyFocusColor;

@@ -17,6 +17,10 @@ public class CustomStrategy : Strategy {
 	float m_angle;
 
 	public Direction direction;
+	/// <summary>
+	/// is the hero able to move in this turn
+	/// </summary>
+	public bool isActive;
 	public override SimBlock GetTarget ()
 	{
 		if (BattleField.GetBlock( target ).state == Block.BlockState.Empty) {
@@ -35,6 +39,11 @@ public class CustomStrategy : Strategy {
 	public Direction Angle2Direction( float angle )
 	{
 		return HeroInfo.Angle2Direction (angle);
+	}
+
+	public override bool GetActive ()
+	{
+		return isActive;
 	}
 
 }

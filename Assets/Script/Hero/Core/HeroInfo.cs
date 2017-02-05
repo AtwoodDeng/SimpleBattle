@@ -71,6 +71,7 @@ public class HeroInfo : HeroComponent
 	public DamageType attackType;
 	public Direction direction;
 	public HeroType type;
+	public bool isActive;
 
 	public List<HistoryStep> history;
 	public int ID;
@@ -307,6 +308,7 @@ public class RawHeroInfo
 public class HeroMoveInfo
 {
 	public int ID;
+	public bool isActive;
 	public SimBlock target{
 		get {
 			return new SimBlock( t_i , t_j );
@@ -334,12 +336,14 @@ public class HeroMoveInfo
 	public int o_j;
 
 
+
 	public HeroMoveInfo Copy()
 	{
 		HeroMoveInfo res = new HeroMoveInfo();
 		res.ID = ID;
 		res.target = target;
 		res.toDirection = toDirection;
+		res.isActive = isActive;
 
 		res.ori = ori;
 		res.type = type;
