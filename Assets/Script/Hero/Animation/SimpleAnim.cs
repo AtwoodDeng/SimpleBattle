@@ -86,7 +86,8 @@ public class SimpleAnim : HeroAnim {
 		parent.transform.DOMove (targetBlock.linkedBlock.GetCenterPosition (), duration);
 		return duration;
 	}
-	public override float Attack (Damage[] damges)
+
+	public override float Attack (Damage[] damges, SimBlock[] targets, SimBlock[] attackRange)
 	{
 		float duration = interval * damges.Length + 1f;
 
