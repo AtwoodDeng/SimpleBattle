@@ -48,4 +48,8 @@ public enum HeroType
 	Sword = 5,
 	Fire = 6 ,
 	Thief = 7,
+
+	NijiTest = 101,
+	SwordTest = 102,
+	MegaTest = 103,
 }

@@ -52,4 +52,8 @@ public class HeroAnim : HeroComponent {
 	{
 		
 	}
+
+	public virtual void MoveBlocked()
+	{
+	}
 }

@@ -260,11 +260,9 @@ public class BattleBlock : MonoBehaviour {
 		m_hero = h;
 		if (h == null) {
 			state = Block.BlockState.Empty;
-//			background.DOColor ( Color.white , 0.2f);
 
 		} else {
 			state = Block.BlockState.Hero;
-//			background.DOColor ( Color.gray , 0.2f);
 		}
 	}
 
@@ -379,5 +377,10 @@ public class SimBlock
 	public int GetDistance( SimBlock toward )
 	{
 		return Mathf.Abs (m_i - toward.m_i) + Mathf.Abs( m_j - toward.m_j);
+	}
+
+	public override string ToString ()
+	{
+		return string.Format ("[SimBlock]{0},{1}" , m_i , m_j);
 	}
 }

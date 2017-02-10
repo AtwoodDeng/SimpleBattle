@@ -52,6 +52,10 @@ public class SimpleHero : InteractableHero {
 				targetArrow = sprite;
 		}
 
+		SpriteRenderer head = GetComponent<SpriteRenderer>();
+		Sprite res = Resources.Load<Sprite>("Img/Icon/" +  GetHeroInfo().type.ToString() + "Icon");
+		head.sprite = res;
+
 		InitStateMachine();
 
 		oritinalPos = transform.position;
@@ -95,9 +99,8 @@ public class SimpleHero : InteractableHero {
 				transform.DOMove( TriggerBlock.GetCenterPosition() , 0.2f );
 
 				// Disable Collider
-				Collider collider = GetComponent<Collider>();
-				if ( collider != null )
-					collider.enabled = false;
+				if ( m_collider != null )
+					m_collider.enabled = false;
 			}
 
 		});
@@ -120,11 +123,11 @@ public class SimpleHero : InteractableHero {
 			LogicArg arg = (LogicArg) obj;
 			if ( arg.type == LogicEvents.ConfirmHero )
 			{
-				Block block = (Block)arg.GetMessage(M_Event.BLOCK);
-				if ( !TemBlock.Equals(block))
-				{
+//				Block block = (Block)arg.GetMessage(M_Event.BLOCK);
+//				if ( TemBlock != null && !TemBlock.Equals(block))
+//				{
 					m_stateMachine.State = HeroState.Strategy;
-				}
+//				}
 			}else if ( arg.type == LogicEvents.SelectBlock )
 			{
 				Block block = (Block)arg.GetMessage(M_Event.BLOCK);
@@ -306,9 +309,9 @@ public class SimpleHero : InteractableHero {
 		return base.BattleAttack ();
 	}
 
-	void OnGUI()
-	{
-		GUILayout.Label ("");
-		GUILayout.Label ("State " + m_stateMachine.State);
-	}
+//	void OnGUI()
+//	{
+//		GUILayout.Label ("");
+//		GUILayout.Label ("State " + m_stateMachine.State);
+//	}
 }

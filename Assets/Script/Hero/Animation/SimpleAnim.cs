@@ -4,7 +4,8 @@ using UnityEngine;
 using DG.Tweening;
 
 public class SimpleAnim : HeroAnim {
-	[SerializeField] GameObject bulletPrefab;
+	 GameObject bulletPrefab;
+	 GameObject blockPrefab;
 	[SerializeField] float interval = 0.2f;
 
 	[SerializeField] TextMesh healthText;
@@ -46,6 +47,9 @@ public class SimpleAnim : HeroAnim {
 			}
 		};
 
+		bulletPrefab = Resources.Load<GameObject>("Effect/MagicBullet");
+		blockPrefab = Resources.Load<GameObject>("Effect/Block");
+
 		InitHeroInfo();
 	}
 		
@@ -72,7 +76,6 @@ public class SimpleAnim : HeroAnim {
 		parent.GetHeroInfo().DeathFunc += delegate() {
 			healthText.gameObject.SetActive(false);
 			dmgText.gameObject.SetActive(false);
-			parent.TemBlock = null;
 			GetComponent<SpriteRenderer>().DOColor( Color.red , 1f ).OnComplete( delegate() {
 				gameObject.SetActive(false);	
 			});
@@ -112,5 +115,12 @@ public class SimpleAnim : HeroAnim {
 		Block block = BattleField.GetBlock( dmg.target );
 		bulletCom.Shoot (block.GetCenterPosition() );
 		parent.SendDamage ( dmg );
+	}
+
+	public override void MoveBlocked ()
+	{
+		GameObject block = Instantiate(blockPrefab) as GameObject;
+		block.transform.parent = transform;
+		block.transform.localPosition = Vector3.zero;
 	}
 }

@@ -84,6 +84,10 @@ public class Hero : MBehavior {
 		if ( m_heroAnim != null )
 			m_heroAnim.Init( this );
 
+		GetHeroInfo().DeathFunc += delegate {
+			TemBlock.isLock = false;
+			TemBlock = null;
+		};
 		m_IsInit = true;
 	}
 
@@ -116,22 +120,59 @@ public class Hero : MBehavior {
 	}
 
 	/// <summary>
-	/// Lock on one or more target
+	/// Set the move target 
 	/// </summary>
-	public void BattleTarget() {
+	/// <returns><c>true</c>, if target was not blocked, the move succeed <c>false</c> otherwise.</returns>
+	public bool BattleTarget() {
 		GetHeroInfo().Record( null , HistoryStep.RecordType.StartBattle );
 		
 		targetBlock = BattleField.GetBlock( m_strategy.GetTarget ());
 		targetDirection = m_strategy.GetDirection ();
-		if ( targetBlock.isLock )
-		{
-			targetBlock = TemBlock;
+
+		bool isBlock = targetBlock.isLock;
+		if ( isBlock ) {
+//			targetBlock = GetNearestBlock(targetBlock);
+//			if ( targetBlock == null )
+				targetBlock = TemBlock;
 			UnableToMove();
 		}
 		TemBlock.isLock = false;
 		targetBlock.isLock = true;
 
-		// if the first time enter the battle Target 
+		return !isBlock;
+	}
+
+	/// <summary>
+	/// Gets the nearest block from target
+	/// </summary>
+	/// <returns>The nearest block. returns null if all blocks are locked</returns>
+	/// <param name="target">Target.</param>
+	public Block GetNearestBlock( Block target )
+	{
+		List<SimBlock> moveRange = new List<SimBlock>(m_move.GetMoveRange());
+		moveRange.Sort(delegate(SimBlock x, SimBlock y) {
+			int disX = target.SimpleBlock.GetDistance(x);	
+			int disY = target.SimpleBlock.GetDistance(y);
+			return disX.CompareTo(disY);
+		});
+
+//		Debug.Log(" target " + target.SimpleBlock);
+
+		for( int i = 0 ; i < moveRange.Count ; ++ i ) {
+			Block res = BattleField.GetBlock( moveRange[i] );
+//			Debug.Log(string.Format( " i = {0} block = {1} dist = {2}" , i , res.SimpleBlock , target.GetDistance(res)));
+
+			if ( !res.isLock ) {
+				return res;
+			}
+		}
+
+		return null;
+	}
+
+	public virtual void UnableToMove() {
+		if ( m_heroAnim != null )
+			m_heroAnim.MoveBlocked();
 	}
 
 	/// <summary>
@@ -220,16 +261,11 @@ public class Hero : MBehavior {
 	public void RecieveDamage( Damage dmg )
 	{
 		GetHeroInfo().RecieveDamage( ref dmg );
-		m_passive.RecieveDamage( ref dmg );
+		if ( m_passive != null )
+			m_passive.RecieveDamage( ref dmg );
 		GetHeroInfo().RecieveDamage( dmg );
 	}
 
-//	public virtual void UnableToAttack() {
-//	}
-
-	public virtual void UnableToMove() {
-		
-	}
 
 //	public bool IsInAttackRange( Block b )
 //	{

@@ -14,11 +14,14 @@ public class LogicManager : MBehavior {
 	public static float moveInterval = 0.1f;
 	public static float attackDuration = 1f;
 	public static float attackInterval = 0.1f;
+	// interval between different phase and two hero's move
+	public static float basicInterval = 0.5f;
 
 	public enum Mode
 	{
 		AllBattle,
 		SingleBattle,
+		InOrderBattle,
 	}
 	public Mode mode;
 
@@ -141,6 +144,11 @@ public class LogicManager : MBehavior {
 
 	IEnumerator DoBattle()
 	{
+		///////////////////////////
+		/// 
+		/// All Heros move first and attack in order
+		/// 
+		///////////////////////////
 		if ( mode == Mode.AllBattle )
 		{
 			Hero[] list = GetSortedHeroList ();
@@ -164,7 +172,7 @@ public class LogicManager : MBehavior {
 				list[i].EndMove();
 			}
 
-			yield return new WaitForSeconds( 0.5f );
+			yield return new WaitForSeconds( basicInterval );
 
 			// Battle
 			for (int i = 0; i < list.Length; ++i) {
@@ -183,9 +191,69 @@ public class LogicManager : MBehavior {
 				}
 			}
 
-			yield return new WaitForSeconds( 0.5f );
+			yield return new WaitForSeconds( basicInterval );
 
 			m_stateMachine.State = State.Count;
+
+			///////////////////////////
+			/// 
+			/// All Heros move and attack in order
+			/// 
+			///////////////////////////
+		}else if ( mode == Mode.InOrderBattle )	
+		{
+			Hero[] list = GetSortedHeroList ();
+			//		Debug.Log ("List Length" + list.Length);
+
+			// Begin
+			for (int i = 0; i < list.Length; ++i) {
+				list [i].BeginBattle ();
+			}
+
+			BattleField.ResetLock();
+			// Strategy
+			for (int i = 0; i < list.Length; ++i) {
+			}
+
+			// Move
+			for (int i = 0; i < list.Length; ++i) {
+			}
+
+			// Battle
+			for (int i = 0; i < list.Length; ++i) {
+				if (!list [i].GetHeroInfo ().IsDead) {
+					bool canAttack = list [i].BattleTarget ();
+					float moveDuration = list [i].BattleMove ();
+					yield return new WaitForSeconds ( moveDuration );
+					yield return new WaitForSeconds ( moveInterval );
+					list[i].EndMove();
+					if ( canAttack ) {
+						float AttackDuration = list [i].BattleAttack ();
+						yield return new WaitForSeconds (AttackDuration);
+						yield return new WaitForSeconds (attackInterval);
+						list[i].EndAttack();
+					}
+				}
+
+				yield return new WaitForSeconds( basicInterval );
+			}
+
+			// End
+			for (int i = 0; i < list.Length; ++i) {
+				if (!list [i].GetHeroInfo ().IsDead) {
+					list[i].EndBattle();
+				}
+			}
+
+			yield return new WaitForSeconds( basicInterval );
+
+			m_stateMachine.State = State.Count;
+
+			///////////////////////////
+			/// 
+			/// Only One Hero Move
+			/// 
+			///////////////////////////
 		}else if ( mode == Mode.SingleBattle )
 		{
 			Hero[] list = GetSortedHeroList();
@@ -211,7 +279,7 @@ public class LogicManager : MBehavior {
 				}
 			}
 
-			yield return new WaitForSeconds( 0.5f );
+			yield return new WaitForSeconds( basicInterval );
 
 			// Battle
 			for (int i = 0; i < list.Length; ++i) {
@@ -232,7 +300,7 @@ public class LogicManager : MBehavior {
 				}
 			}
 
-			yield return new WaitForSeconds( 0.5f );
+			yield return new WaitForSeconds( basicInterval );
 
 			m_stateMachine.State = State.Count;
 		}

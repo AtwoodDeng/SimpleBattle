@@ -107,6 +107,7 @@ public class BattleField : MonoBehaviour {
 //			M_Event.FireLogicEvent (LogicEvents.SelectBlock, arg);
 		} else if (block.state == Block.BlockState.Hero) {
 			M_Event.FireLogicEvent (LogicEvents.ConfirmHero, arg);
+			Debug.Log("Confirm Hero Fire " + block.SimpleBlock);
 		}
 	}
 

@@ -7,7 +7,7 @@ public class NetworkHero : InteractableHero {
 	public enum HeroState
 	{
 		None,
-		StrategyNone,
+		Strategy,
 		StrategyMove,
 		StrategyAttack,
 		Battle,
@@ -26,11 +26,67 @@ public class NetworkHero : InteractableHero {
 	{
 		m_stateMachine = new AStateMachine<HeroState, LogicEvents>( HeroState.None );
 
-		m_stateMachine.AddEnter(HeroState.StrategyNone , delegate {
+
+		m_stateMachine.BlindStateEventHandler (HeroState.Strategy, delegate(object obj) {
+			LogicArg arg = (LogicArg) obj;
+			Block block = (Block)arg.GetMessage(M_Event.BLOCK);
+			Debug.Log("Get event" + arg.type);
+			if ( arg.type == LogicEvents.ConfirmHero )
+			{
+				Debug.Log("Get Confirm Hero" + block.SimpleBlock + " " + TemBlock.SimpleBlock);
+				if ( TemBlock !=null && TemBlock.Equals( block) ) {
+					m_stateMachine.State = HeroState.StrategyMove;
+				}else
+				{
+					m_stateMachine.State = HeroState.Strategy;
+				}
+			}else if ( arg.type == LogicEvents.SelectBlock )
+			{
+				m_stateMachine.State = HeroState.Strategy;
+			}
+		});
+
+		m_stateMachine.BlindStateEventHandler (HeroState.StrategyMove, delegate(object obj) {
+			LogicArg arg = (LogicArg) obj;
+			Block block = (Block)arg.GetMessage(M_Event.BLOCK);
+			if ( arg.type == LogicEvents.ConfirmHero )
+			{
+				if ( TemBlock !=null && TemBlock.Equals( block) ) {
+					m_stateMachine.State = HeroState.StrategyAttack;
+				}else
+				{
+					m_stateMachine.State = HeroState.Strategy;
+				}
+			}else if ( arg.type == LogicEvents.SelectBlock )
+			{
+				m_stateMachine.State = HeroState.Strategy;
+			}
+		});
+
+		m_stateMachine.BlindStateEventHandler (HeroState.StrategyAttack, delegate(object obj) {
+			LogicArg arg = (LogicArg) obj;
+			Block block = (Block)arg.GetMessage(M_Event.BLOCK);
+			if ( arg.type == LogicEvents.ConfirmHero )
+			{
+				if ( TemBlock !=null && TemBlock.Equals( block) ) {
+					m_stateMachine.State = HeroState.StrategyMove;
+				}else
+				{
+					m_stateMachine.State = HeroState.Strategy;
+				}
+			}else if ( arg.type == LogicEvents.SelectBlock )
+			{
+				m_stateMachine.State = HeroState.Strategy;
+			}
+		});
+
+		m_stateMachine.AddEnter(HeroState.Strategy , delegate {
 			if ( m_collider == null )
 				m_collider = GetComponent<BoxCollider>();
 			if ( m_collider != null )
 				m_collider.size = new Vector3( 2.56f , 2.56f , 1f );
+			if ( m_collider != null )
+				m_collider.enabled = false;
 		});
 
 		m_stateMachine.AddEnter( HeroState.StrategyMove , delegate() {
@@ -41,7 +97,9 @@ public class NetworkHero : InteractableHero {
 			BattleField.ShowBlock( m_attack.GetAttackRange() , BattleBlock.BlockVisualType.AttackRangeEnermy );	
 		});
 
-		m_stateMachine.BlindFromEveryState(LogicEvents.StrategyPhase , HeroState.StrategyNone );
+		m_stateMachine.BlindFromEveryState(LogicEvents.StrategyPhase , HeroState.Strategy );
+
+		m_stateMachine.State = HeroState.Strategy;
 
 	}
 
@@ -50,12 +108,17 @@ public class NetworkHero : InteractableHero {
 		base.Init ();
 		LogicManager.Instance.RegisterHero( this );
 		InitStateMachine ();
+
+
+		SpriteRenderer head = GetComponent<SpriteRenderer>();
+		Sprite res = Resources.Load<Sprite>("Img/Icon/" +  GetHeroInfo().type.ToString() + "Icon");
+		head.sprite = res;
+
 	}
 
 
 	public override float BattleMove ()
 	{
-		
 		return base.BattleMove ();
 	}
 	public void Move( HeroMoveInfo info )
@@ -69,17 +132,16 @@ public class NetworkHero : InteractableHero {
 		}
 	}
 
-	public override void Select ()
-	{
-		Debug.Log("Select " );
-		base.Select ();
-		if (m_stateMachine.State == HeroState.StrategyNone
-			|| m_stateMachine.State == HeroState.StrategyAttack ) {
-			m_stateMachine.State = HeroState.StrategyMove;
-		} else if (m_stateMachine.State == HeroState.StrategyMove) {
-			m_stateMachine.State = HeroState.StrategyAttack;
-		}
-	}
+//	public override void Select ()
+//	{
+//		base.Select ();
+//		if (m_stateMachine.State == HeroState.StrategyNone
+//			|| m_stateMachine.State == HeroState.StrategyAttack ) {
+//			m_stateMachine.State = HeroState.StrategyMove;
+//		} else if (m_stateMachine.State == HeroState.StrategyMove) {
+//			m_stateMachine.State = HeroState.StrategyAttack;
+//		}
+//	}
 
 	void OnEvent( LogicArg arg )
 	{
@@ -98,10 +160,10 @@ public class NetworkHero : InteractableHero {
 		M_Event.UnRegisterAll (OnEvent);
 	}
 
-//	void OnGUI()
-//	{
-//		GUILayout.Label ("");
-//		GUILayout.Label ("State " + m_stateMachine.State);
-//	}
+	void OnGUI()
+	{
+		GUILayout.Label ("");
+		GUILayout.Label ("State " + m_stateMachine.State);
+	}
 
 }
