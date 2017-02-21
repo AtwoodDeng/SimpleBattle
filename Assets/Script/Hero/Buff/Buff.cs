@@ -12,6 +12,13 @@ public class Buff {
 		return BuffType.None;
 	}
 
+	public virtual void DeepCopy( Buff buff , Dictionary<Hero,Hero> heroMap   ) {
+		if ( buff.parent != null )
+			parent = heroMap[buff.parent];
+		remainTurn = buff.remainTurn;
+		addType = buff.addType;
+	}
+
 	public virtual void Update( BuffUpdateType type )
 	{
 		switch( type )

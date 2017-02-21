@@ -5,16 +5,25 @@ using UnityEngine;
 public class HeroInfo : HeroComponent
 {
 	#region BasicData
+	/// <summary>
+	/// The heal of the hero
+	/// </summary>
+	public float m_health;
 	public float Health{
 		get{
 			return m_health;
 		}
 		set {
-			HealthChangeFunc (m_health, value);
+			if ( HealthChangeFunc !=null )
+				HealthChangeFunc (m_health, value);
 			m_health = value;
 		}
 	}
-	public float m_health;
+	/// <summary>
+	/// The move Range of the hero
+	/// </summary>
+	/// <value>The move range.</value>
+	public int m_moveRange;
 	public int MoveRange{
 		get {
 			int res = m_moveRange;
@@ -25,7 +34,12 @@ public class HeroInfo : HeroComponent
 			return res;
 		}
 	}
-	public int m_moveRange;
+
+	/// <summary>
+	/// The attack range of the hero
+	/// </summary>
+	/// <value>The attack range.</value>
+	public int m_attackRange;
 	public int AttackRange{
 		get {
 			int res = m_attackRange;
@@ -36,7 +50,12 @@ public class HeroInfo : HeroComponent
 			return res;
 		}
 	}
-	public int m_attackRange;
+
+	/// <summary>
+	/// The agile of the hero
+	/// </summary>
+	/// <value>The agile.</value>
+	public float m_agile;
 	public float Agile{
 		get {
 			float res = m_agile;
@@ -47,7 +66,11 @@ public class HeroInfo : HeroComponent
 			return res;
 		}
 	}
-	public float m_agile;
+	/// <summary>
+	/// The attack of the hero
+	/// </summary>
+	/// <value>The attack.</value>
+	public float m_attack;
 	public float Attack{
 		get { 
 			float res = m_attack;
@@ -58,7 +81,7 @@ public class HeroInfo : HeroComponent
 			return res;
 		}
 	}
-	public float m_attack;
+
 	public TeamColor TeamColor{
 		get { return m_teamColor ; }
 		set { 
@@ -68,8 +91,28 @@ public class HeroInfo : HeroComponent
 		}
 	}
 	public TeamColor m_teamColor;
-	public DamageType attackType;
-	public Direction direction;
+	/// <summary>
+	/// The type of attack.
+	/// </summary>
+	public DamageType m_attackType;
+	public DamageType AttackType{
+		get { 
+			return m_attackType;
+		}
+	}
+	/// <summary>
+	/// The direction of the hero
+	/// </summary>
+	public Direction m_direction;
+	public Direction Direction{
+		get {
+			return m_direction;
+		}
+		set {
+			m_direction = value;
+		}
+	}
+
 	public HeroType type;
 	public bool isActive;
 
@@ -88,7 +131,7 @@ public class HeroInfo : HeroComponent
 	public event HealthChangeHandler HealthChangeFunc;
 	public event DeathHandler DeathFunc;
 	public event TeamColorHandler TeamColorFunc;
-	public bool IsDead{
+	public bool IsDead {
 		get { return Health <= 0; }
 	}
 
@@ -117,14 +160,38 @@ public class HeroInfo : HeroComponent
 	public RawHeroInfo GetRawHeroInfo()
 	{
 		RawHeroInfo res = new RawHeroInfo();
-//		Debug.Log("parent " + parent + " Tem " + parent.TemBlock.m_i + " " + parent.TemBlock.m_j );
 		res.block = parent.TemSimpleBlock;
 		res.ID = ID;
 		res.type = type;
-		res.direction = direction;
+		res.direction = Direction;
 		res.aglie = Agile;
 
 		return res;
+	}
+
+	/// <summary>
+	/// Deep copy from another hero info.
+	/// </summary>
+	/// <param name="other">Other.</param>
+	public void DeepCopy( HeroInfo other , Dictionary<Hero,Hero> heroMap )
+	{
+		m_health = other.m_health;
+		m_moveRange = other.m_moveRange;
+		m_attackRange = other.m_attackRange;
+		m_attack = other.m_attack;
+		m_agile = other.m_agile;
+		m_direction = other.m_direction;
+		m_attackType = other.m_attackType;
+		m_teamColor = other.m_teamColor;
+		if ( other.history != null )
+		foreach (HistoryStep step in other.history) {
+			history.Add (new HistoryStep (step , heroMap));
+		}
+		if ( other.buffList != null )
+		foreach (Buff buff in other.buffList) {
+			buffList.Add( BuffFactory.CreateBuffFrom( buff , heroMap ));
+		}
+
 	}
 
 
@@ -243,7 +310,7 @@ public class HeroInfo : HeroComponent
 
 	public void SetDirectionFromAngle( float _a )
 	{
-		direction = Angle2Direction (_a);
+		Direction = Angle2Direction (_a);
 	}
 
 	#region Tool
@@ -363,6 +430,23 @@ public class HistoryStep
 	public SimBlock block;
 	public Damage[] damages;
 	public float health;
+	public HistoryStep()
+	{
+		
+	}
+
+	public HistoryStep( HistoryStep other , Dictionary<Hero,Hero> heroMap )
+	{
+		type = other.type;
+		block = new SimBlock (other.block);
+		health = other.health;
+		if (other.damages != null) {
+			damages = new Damage[other.damages.Length];
+			for (int i = 0; i < damages.Length; i++) {
+				damages [i] = new Damage (other.damages [i], heroMap);
+			}
+		}
+	}
 }
 
 public class Damage
@@ -373,15 +457,29 @@ public class Damage
 	{
 		get { return damage < 0 ; }
 	}
-	public HeroInfo caster;
+	public Hero caster;
 	public SimBlock target;
 	public Buff[] buffs;
-	public Damage( float _d , DamageType _type , HeroInfo _c , SimBlock _t )
+
+	public Damage( float _d , DamageType _type , Hero _h , SimBlock _t )
 	{
 		damage = _d;
-		caster = _c;
+		caster = _h;
 		target = _t;
 		type = _type;
+	}
+	public Damage( Damage other , Dictionary<Hero,Hero> heroMap )
+	{
+		damage = other.damage;
+		type = other.type;
+		caster = heroMap [other.caster];
+		target = new SimBlock (other.target);
+		if (other.buffs != null) {
+			buffs = new Buff[other.buffs.Length];
+			for (int i = 0; i < other.buffs.Length; ++i) {
+				buffs [i] = BuffFactory.CreateBuffFrom (other.buffs [i], heroMap);
+			}
+		}
 	}
 }
 
@@ -394,8 +492,9 @@ public enum DamageType
 
 public enum TeamColor
 {
-	Red,
-	Blue,
+	Red=0,
+	Blue=1,
+	None=10,
 }
 
 public enum Direction

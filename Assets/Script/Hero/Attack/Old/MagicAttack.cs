@@ -13,7 +13,7 @@ public class MagicAttack : Attack {
 
 		count = 0;
 		float duration = 0;
-		switch (parent.GetHeroInfo ().direction) {
+		switch (parent.GetHeroInfo ().Direction) {
 		case Direction.Up:
 			for (int ii = i - 1; ii <= i + 1; ++ii) {
 				for (int jj = j + 1; jj < BattleField.Height; ++jj) {

@@ -69,6 +69,15 @@ public class SoldierPassive : Passive {
 public class SoliderAttackBuff : Buff
 {
 	float AttackIncrease = 0;
+
+	public override void DeepCopy (Buff buff, Dictionary<Hero, Hero> heroMap)
+	{
+		base.DeepCopy (buff, heroMap);
+		if (buff is SoliderAttackBuff) {
+			AttackIncrease = ((SoliderAttackBuff)buff).AttackIncrease;
+		}
+	}
+
 	public override BuffType GetBuffType ()
 	{
 		return BuffType.SoldierBuff;

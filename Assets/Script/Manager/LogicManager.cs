@@ -5,17 +5,34 @@ using UnityEngine;
 public class LogicManager : MBehavior {
 
 
-	static public LogicManager Instance{ get { return m_Instance; } }
+	static public LogicManager Instance {
+		get {
+			if (m_Instance == null)
+				m_Instance = FindObjectOfType<LogicManager> ();
+			return m_Instance; }
+		set {
+			if (m_Instance == null)
+				m_Instance = value;
+		}
+	}
 	static public LogicManager m_Instance;
-	public LogicManager(){ m_Instance = this; }
+
 	public bool isOnline;
 
-	public static float moveDuration = 0.25f;
+	public static float moveDuration = 0.8f;
 	public static float moveInterval = 0.1f;
 	public static float attackDuration = 1f;
 	public static float attackInterval = 0.1f;
 	// interval between different phase and two hero's move
 	public static float basicInterval = 0.5f;
+
+	public int Round
+	{
+		get {
+			return m_round;
+		}
+	}
+	private int m_round;
 
 	public enum Mode
 	{
@@ -55,6 +72,7 @@ public class LogicManager : MBehavior {
 	{
 		m_stateMachine = new AStateMachine<State, LogicEvents> (State.None);
 		m_stateMachine.AddEnter (State.PlaceHero, delegate {
+			InitGame();
 			M_Event.FireLogicEvent(LogicEvents.PlaceHeroPhase,new LogicArg(this));	
 		});
 
@@ -77,7 +95,7 @@ public class LogicManager : MBehavior {
 
 		m_stateMachine.AddEnter (State.Strategy, delegate {
 			M_Event.FireLogicEvent(LogicEvents.StrategyPhase , new LogicArg(this));
-			OnBeforeBattle();
+			OnBeforeBattle(heroList.ToArray());
 		});
 
 		m_stateMachine.AddEnter( State.WaitStrategy , delegate {
@@ -100,11 +118,14 @@ public class LogicManager : MBehavior {
 
 		m_stateMachine.AddEnter (State.Count, delegate {
 
-
-
-			m_stateMachine.State = State.Strategy;	
+		m_stateMachine.State = State.Strategy;	
 		});
 
+	}
+
+	public void InitGame()
+	{
+		m_round = 0;
 	}
 
 	public void RegisterHero( Hero h )
@@ -128,10 +149,13 @@ public class LogicManager : MBehavior {
 
 	/// <summary>
 	/// Call all hero .BeginBattle
+	/// and increae the number of round
 	/// </summary>
-	void OnBeforeBattle()
+	void OnBeforeBattle( Hero[] heros )
 	{
-		Hero[] list = GetSortedHeroList ();
+		m_round++;
+
+		Hero[] list = GetSortedHeroList ( heros );
 
 		for (int i = 0; i < list.Length; ++i) {
 			list [i].BeginBattle ();
@@ -151,7 +175,7 @@ public class LogicManager : MBehavior {
 		///////////////////////////
 		if ( mode == Mode.AllBattle )
 		{
-			Hero[] list = GetSortedHeroList ();
+			Hero[] list = GetSortedHeroList ( heroList.ToArray() );
 	//		Debug.Log ("List Length" + list.Length);
 
 			// Begin
@@ -202,7 +226,7 @@ public class LogicManager : MBehavior {
 			///////////////////////////
 		}else if ( mode == Mode.InOrderBattle )	
 		{
-			Hero[] list = GetSortedHeroList ();
+			Hero[] list = GetSortedHeroList ( heroList.ToArray() );
 			//		Debug.Log ("List Length" + list.Length);
 
 			// Begin
@@ -256,7 +280,7 @@ public class LogicManager : MBehavior {
 			///////////////////////////
 		}else if ( mode == Mode.SingleBattle )
 		{
-			Hero[] list = GetSortedHeroList();
+			Hero[] list = GetSortedHeroList( heroList.ToArray() );
 
 			// Begin
 			for (int i = 0; i < list.Length; ++i) {
@@ -306,10 +330,70 @@ public class LogicManager : MBehavior {
 		}
 	}
 
-	Hero[] GetSortedHeroList()
+	/// <summary>
+	/// Start a virtual Battle 
+	/// </summary>
+	/// <returns>The the winning team, if no team wins, return None.</returns>
+	/// <param name="virtualheroList">Virtualhero list.</param>
+	public TeamColor VirtualBattle( Hero[] virtualheroList )
+	{
+		if ( mode == Mode.InOrderBattle )	
+		{
+			Hero[] list = GetSortedHeroList ( virtualheroList );
+
+			// Begin
+			for (int i = 0; i < list.Length; ++i) {
+				list [i].BeginBattle ();
+			}
+
+			BattleField.ResetLock();
+			// Strategy
+			for (int i = 0; i < list.Length; ++i) {
+			}
+
+			// Move
+			for (int i = 0; i < list.Length; ++i) {
+			}
+
+			// Battle
+			for (int i = 0; i < list.Length; ++i) {
+				if (!list [i].GetHeroInfo ().IsDead) {
+					bool canAttack = list [i].BattleTarget ();
+					list [i].BattleMove ();
+					list[i].EndMove();
+					if ( canAttack ) {
+						list [i].BattleAttack ();
+						list[i].EndAttack();
+					}
+				}
+			}
+
+			// End
+			for (int i = 0; i < list.Length; ++i) {
+				if (!list [i].GetHeroInfo ().IsDead) {
+					list[i].EndBattle();
+				}
+			}
+		}
+
+		bool[] isAllDead = new bool[2];
+		for( int i = 0 ; i < isAllDead.Length ; ++ i )
+			isAllDead[i] = true;
+		foreach (Hero h in virtualheroList)
+			if (!h.GetHeroInfo ().IsDead)
+				isAllDead [(int)h.GetHeroInfo ().TeamColor] = false;
+		if (isAllDead [(int)TeamColor.Blue] && !isAllDead [(int)TeamColor.Red])
+			return TeamColor.Red;
+		else if (isAllDead [(int)TeamColor.Red] && !isAllDead [(int)TeamColor.Blue])
+			return TeamColor.Blue;
+
+		return TeamColor.None;
+	}
+
+	Hero[] GetSortedHeroList( Hero[] heros )
 	{
 		// TODO sort the hero according to the agile
-		List<Hero> temList = new List<Hero>( heroList.ToArray() );
+		List<Hero> temList = new List<Hero>( heros );
 		for (int i = temList.Count -1; i >= 0 ; --i)
 			if (temList [i].GetHeroInfo().IsDead)
 				temList.RemoveAt (i);

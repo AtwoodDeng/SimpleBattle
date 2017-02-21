@@ -22,6 +22,18 @@ public class FireBuff: Buff
 	int count = 0;
 	public float DamagePerLayer = 0;
 
+	public override void DeepCopy (Buff buff, Dictionary<Hero, Hero> heroMap)
+	{
+		base.DeepCopy (buff, heroMap);
+		if (buff is FireBuff) {
+			sender = heroMap [((FireBuff)buff).sender];
+			count = ((FireBuff)buff).count;
+			DamagePerLayer = ((FireBuff)buff).DamagePerLayer;
+		}
+	}
+
+
+
 	public FireBuff( float _DPL , Hero _S )
 	{
 		DamagePerLayer = _DPL;
@@ -40,7 +52,7 @@ public class FireBuff: Buff
 		if ( !dmg.IsHeal && ( dmg.type == DamageType.Physics || dmg.type == DamageType.Magic ) )
 		{
 			count ++ ;
-			Damage fireDMG = new Damage( count * DamagePerLayer , DamageType.FireBuff , sender.GetHeroInfo() , parent.TemSimpleBlock );
+			Damage fireDMG = new Damage( count * DamagePerLayer , DamageType.FireBuff , sender , parent.TemSimpleBlock );
 			parent.RecieveDamage( fireDMG );
 		}
 	}

@@ -116,6 +116,15 @@ public class NetworkHero : InteractableHero {
 
 	}
 
+	public override void SetBlock (SimBlock block)
+	{
+		base.SetBlock (block);
+
+		if ( TemBlock != null )
+			transform.position = TemBlock.GetCenterPosition();
+	}
+
+
 
 	public override float BattleMove ()
 	{

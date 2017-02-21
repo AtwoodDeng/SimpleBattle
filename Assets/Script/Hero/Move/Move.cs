@@ -22,7 +22,7 @@ public class Move : HeroComponent {
 	public SimBlock[] GetMoveRange( )
 	{
 		return GetMoveRange(parent.TemSimpleBlock,
-			parent.GetHeroInfo().direction,
+			parent.GetHeroInfo().Direction,
 			parent.GetHeroInfo().MoveRange);
 	}
 

@@ -25,6 +25,10 @@ public class BattleBlock : MonoBehaviour {
 		BattleAttackRange,
 		// in battle, when attack, shows the attack range
 		BattleAttackTarget,
+		// Move Target
+		BattleMoveTarget,
+		// Move Target block
+		BattleMoveTargetBlocked,
 		// EnermyMoveRange,
 		MoveRangeEnermy,
 		// attack range of enermy
@@ -41,13 +45,19 @@ public class BattleBlock : MonoBehaviour {
 				switch( value )
 				{
 				case BlockVisualType.Normal:
-						RefreshColorByBlock();
+					RefreshColorByBlock();
 					break;
 				case BlockVisualType.StrategyAttackRange:
 					BackgroundSetColor(colorSetting.AttackColor);
 					break;
 				case BlockVisualType.StrategyMoveRange:
 					BackgroundSetColor(colorSetting.MoveRangeColor);
+					break;
+				case BlockVisualType.BattleMoveTarget:
+					BackgroundSetColor(colorSetting.BattleMoveTarget);
+					break;
+				case BlockVisualType.BattleMoveTargetBlocked:
+					BackgroundSetColor(colorSetting.BattleMoveTargetBlocked);
 					break;
 				case BlockVisualType.BattleAttackRange:
 					BackgroundSetColor(colorSetting.BattleAttackRange);
@@ -85,6 +95,12 @@ public class BattleBlock : MonoBehaviour {
 				case BlockVisualType.StrategyConfirm:
 					BackgroundSetColor(colorSetting.StrategyConfirmColor);
 					break;
+				case BlockVisualType.BattleMoveTarget:
+					BackgroundSetColor(colorSetting.BattleMoveTarget);
+					break;
+				case BlockVisualType.BattleMoveTargetBlocked:
+					BackgroundSetColor(colorSetting.BattleMoveTargetBlocked);
+					break;
 				case BlockVisualType.BattleAttackHero:
 					BackgroundSetColor(colorSetting.BattleAttackHero);
 					break;
@@ -117,15 +133,20 @@ public class BattleBlock : MonoBehaviour {
 		public Color AttackColor;
 		public Color StrategyFocusColor;
 		public Color StrategyConfirmColor;
+		public Color BattleMoveTarget;
+		public Color BattleMoveTargetBlocked;
 		public Color BattleAttackHero;
 		public Color BattleAttackRange;
 		public Color BattleAttackRangeHero;
 		public Color BattleMoveRangeEnermy;
 		public Color BattleAttackRangeEnermy;
+
 	};
 	[SerializeField] BlockColorSetting colorSetting;
 
-
+	public Block.BlockState State{
+		get { return state; }
+	}
 	Block.BlockState state{
 		get {
 			return m_block.state;
@@ -138,6 +159,7 @@ public class BattleBlock : MonoBehaviour {
 
 	public void RefreshColorByBlock()
 	{
+		Debug.Log ("RefreshColorByBlock");
 		switch( m_block.state )
 		{
 		case Block.BlockState.Empty:
@@ -169,6 +191,7 @@ public class BattleBlock : MonoBehaviour {
 
 	[SerializeField] float interval = 0.05f;
 
+
 	float Width{
 		get { return transform.localScale.x + interval; }
 	}
@@ -185,6 +208,13 @@ public class BattleBlock : MonoBehaviour {
 	[SerializeField] Block m_block;
 	Hero m_hero;
 
+	public static Vector3 virtualOffset = new Vector3( 0 , 20f , 0);
+	private bool m_isVirtual;
+	public bool IsVirtual
+	{
+		get { return m_isVirtual; }
+	}
+
 	// Use this for initialization
 	void Start () {
 		
@@ -197,18 +227,29 @@ public class BattleBlock : MonoBehaviour {
 
 	public HeroInfo GetHeroInfo()
 	{
+		if (m_hero == null)
+			return null;
 		return m_hero.GetHeroInfo ();
 	}
 
-	public void Init( int i , int j , BattleField p )
+	public void Init( int i , int j , BattleField p , bool isVirtual = false)
 	{
 
 		m_block = new Block (i, j, this);
+		m_hero = null;
 		parent = p;
 
 		transform.parent = p.transform;
+		Vector3 offset = Vector3.zero;
+		name = "block " + i + " " + j;
+		m_isVirtual = isVirtual;
+		if (isVirtual) {
+			offset = virtualOffset;
+			name = "virtual block " + i + " " + j;
+		}
+		
 		transform.localPosition = new Vector3 ((i - (p.gridWidth - 1) * 0.5f ) * Width,
-			(j - (p.gridHeight - 1) * 0.5f  ) * Height, 0);
+			(j - (p.gridHeight - 1) * 0.5f  ) * Height, 0) + offset;
 
 	}
 
@@ -237,9 +278,7 @@ public class BattleBlock : MonoBehaviour {
 	{
 		parent.OnBlockConfirm (m_block);
 	}
-
-
-
+		
 	public void EnterHero( Hero h )
 	{
 		if (state == Block.BlockState.Empty && IsPlacable) {
@@ -288,6 +327,12 @@ public class BattleBlock : MonoBehaviour {
 		RefreshColorByBlock();
 	}
 
+	public void ResetAll()
+	{
+		ResetVisual ();
+		m_block = new Block (m_block.m_i, m_block.m_j, this);
+		m_hero = null;
+	}
 
 }
 

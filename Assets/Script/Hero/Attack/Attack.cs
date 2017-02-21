@@ -16,7 +16,7 @@ public class Attack : HeroComponent {
 	public SimBlock[] GetAttackRange( )
 	{
 		return GetAttackRange(parent.TemSimpleBlock,
-			parent.GetHeroInfo().direction,
+			parent.GetHeroInfo().Direction,
 			parent.GetHeroInfo().AttackRange);
 	}
 
@@ -71,7 +71,7 @@ public class Attack : HeroComponent {
 
 	public virtual Damage GetDamage( HeroInfo myInfo , SimBlock targetBlock )
 	{
-		return new Damage (myInfo.Attack, myInfo.attackType , myInfo , targetBlock);
+		return new Damage (myInfo.Attack, myInfo.m_attackType , myInfo.parent , targetBlock);
 	}
 
 	/// <summary>

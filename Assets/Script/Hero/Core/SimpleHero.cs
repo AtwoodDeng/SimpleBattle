@@ -6,7 +6,6 @@ using DG.Tweening;
 
 public class SimpleHero : InteractableHero {
 
-
 	public enum HeroState
 	{
 		None,
@@ -21,8 +20,7 @@ public class SimpleHero : InteractableHero {
 		BattleAttack,
 		Dead,
 	}
-
-
+		
 	[SerializeField] SpriteRenderer targetLine;
 	[SerializeField] SpriteRenderer targetArrow;
 
@@ -60,6 +58,13 @@ public class SimpleHero : InteractableHero {
 
 		oritinalPos = transform.position;
 		m_collider = GetComponent<BoxCollider> ();
+	}
+	public override void SetBlock (SimBlock block)
+	{
+		base.SetBlock (block);
+
+		if ( TemBlock != null )
+			transform.position = TemBlock.GetCenterPosition();
 	}
 
 
@@ -176,7 +181,8 @@ public class SimpleHero : InteractableHero {
 			targetLine.enabled = false;
 			targetArrow.enabled = false;
 
-			((CustomStrategy)m_strategy).isActive = false;	
+			if ( m_strategy is CustomStrategy )
+				((CustomStrategy)m_strategy).isActive = false;	
 
 		});
 
@@ -309,9 +315,4 @@ public class SimpleHero : InteractableHero {
 		return base.BattleAttack ();
 	}
 
-//	void OnGUI()
-//	{
-//		GUILayout.Label ("");
-//		GUILayout.Label ("State " + m_stateMachine.State);
-//	}
 }

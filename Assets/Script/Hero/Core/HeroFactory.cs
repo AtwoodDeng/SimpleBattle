@@ -4,13 +4,26 @@ using UnityEngine;
 
 public class HeroFactory {
 
+	public static Hero SetupVirtualHero( HeroType type )
+	{
+		GameObject heroObj = CreateHeroByType( type );
+		Hero hero = heroObj.AddComponent<VirtualHero>();
+		heroObj.AddComponent<RandomStrategy> ();
+		hero.Init();
+//		hero.GetHeroInfo ().DeepCopy (info);
+
+		return hero;
+	}
+
 	public static SimpleHero SetupPlacableHero( HeroType type  )
 	{
 		GameObject heroObj = CreateHeroByType( type );
 		SimpleHero hero = heroObj.AddComponent<SimpleHero>();
+		heroObj.AddComponent<CustomStrategy> ();
+		heroObj.AddComponent<SimpleAnim> ();
 
 		hero.Init();
-		hero.GetHeroInfo().direction = Direction.Right;
+		hero.GetHeroInfo().Direction = Direction.Right;
 		hero.GetHeroInfo().TeamColor = TeamColor.Blue;
 
 		return hero;
@@ -21,9 +34,11 @@ public class HeroFactory {
 		GameObject heroObj = CreateHeroByType( rInfo.type );
 		heroObj.name += "Net";
 		NetworkHero hero = heroObj.AddComponent<NetworkHero>();
+		heroObj.AddComponent<CustomStrategy> ();
+		heroObj.AddComponent<SimpleAnim> ();
 
 		hero.Init( rInfo );
-		hero.GetHeroInfo().direction = rInfo.direction;
+		hero.GetHeroInfo().Direction = rInfo.direction;
 		hero.GetHeroInfo().TeamColor = TeamColor.Red;
 
 		return hero;

@@ -5,9 +5,17 @@ using UnityEngine;
 //[ExecuteInEditMode]
 public class BattleField : MonoBehaviour {
 
-	static public BattleField Instance{ get { return m_Instance; } }
+	static public BattleField Instance {
+		get {
+			if (m_Instance == null)
+				m_Instance = FindObjectOfType<BattleField> ();
+			return m_Instance; }
+		set {
+			if (m_Instance == null)
+				m_Instance = value;
+		}
+	}
 	static public BattleField m_Instance;
-	public BattleField(){ m_Instance = this; }
 
 
 	[SerializeField] public int gridWidth = 1;
@@ -20,7 +28,23 @@ public class BattleField : MonoBehaviour {
 	}
 	[SerializeField] GameObject blockPrefab;
 
-	BattleBlock[,] blockGrid;
+	BattleBlock[,] BlockGrid{
+		get {
+			if (m_battleFieldState == BattleFieldState.Normal)
+				return m_normalBlockGrid;
+			else
+				return m_virtualBlockGrid;
+		}
+		set {
+			if (m_battleFieldState == BattleFieldState.Normal)
+				m_normalBlockGrid = value;
+			else
+				m_virtualBlockGrid = value;
+			
+		}
+	}
+	BattleBlock[,] m_normalBlockGrid;
+	BattleBlock[,] m_virtualBlockGrid;
 
 	public delegate void BlockAction( int i , int j , BattleBlock block );
 
@@ -28,39 +52,60 @@ public class BattleField : MonoBehaviour {
 
 	public List<SimBlock> placableBlock = new List<SimBlock>();
 
+	public enum BattleFieldState
+	{
+		Normal,
+		Virtual,
+	}
+	BattleFieldState m_battleFieldState;
+
+
 //	public bool GenerateBattleField = false;
 //	public bool UpdatePlacable = false;
 
 	// Use this for initialization
 	void Awake () {
+		Instance = this;
+		m_battleFieldState = BattleFieldState.Normal;
 //		if ( blockGrid == null )
-			InitBattleBlock ();
+
+		InitBattleBlock ();
+		InitVirtualBlock ();
 	}
 
 	void InitBattleBlock()
 	{
-		if (blockGrid != null && blockGrid.Length > 0) {
-			for (int i = 0; i < blockGrid.GetLength(0); ++i)
-				for (int j = 0; j < blockGrid.GetLength(1); ++j) {
-					DestroyImmediate (blockGrid [i, j].gameObject);
+		if (BlockGrid != null && BlockGrid.Length > 0) {
+			for (int i = 0; i < BlockGrid.GetLength(0); ++i)
+				for (int j = 0; j < BlockGrid.GetLength(1); ++j) {
+					DestroyImmediate (BlockGrid [i, j].gameObject);
 				}
 		}
 		
-		blockGrid = new BattleBlock[gridWidth,gridHeight];
+		BlockGrid = new BattleBlock[gridWidth,gridHeight];
 
-		for (int i = 0; i < blockGrid.GetLength(0); ++i)
-			for (int j = 0; j < blockGrid.GetLength(1); ++j) {
+		for (int i = 0; i < BlockGrid.GetLength(0); ++i)
+			for (int j = 0; j < BlockGrid.GetLength(1); ++j) {
 				GameObject block = Instantiate (blockPrefab);
 				block.SetActive (true);
 
-				blockGrid [i, j] = block.GetComponent<BattleBlock>();
-				blockGrid [i, j].Init (i, j, this);
+				BlockGrid [i, j] = block.GetComponent<BattleBlock>();
+				BlockGrid [i, j].Init (i, j, this, m_battleFieldState == BattleFieldState.Virtual);
 			}
 
 		foreach (SimBlock b in placableBlock) {
-			blockGrid [b.m_i, b.m_j].BlockInfo.isPlacable = true;
+			BlockGrid [b.m_i, b.m_j].BlockInfo.isPlacable = true;
 		}
 	}
+
+	void InitVirtualBlock()
+	{
+		m_battleFieldState = BattleFieldState.Virtual;
+		InitBattleBlock ();
+		m_battleFieldState = BattleFieldState.Normal;
+	}
+
+
 	
 	// Update is called once per frame
 	void Update () {
@@ -79,7 +124,7 @@ public class BattleField : MonoBehaviour {
 
 		for (int i = 0; i < gridWidth; ++i)
 			for (int j = 0; j < gridHeight; ++j) {
-				blockGrid [i, j].IsSelected = false;
+				BlockGrid [i, j].IsSelected = false;
 			}
 
 		block.IsSelected = true;
@@ -115,7 +160,7 @@ public class BattleField : MonoBehaviour {
 	{
 		if (Instance != null) {
 			if (i >= 0 && i < Instance.gridWidth && j >= 0 && j < Instance.gridHeight)
-				return Instance.blockGrid [i, j].BlockInfo;
+				return Instance.BlockGrid [i, j].BlockInfo;
 			else
 				return null;
 		}
@@ -130,7 +175,7 @@ public class BattleField : MonoBehaviour {
 	static public Block GetRandomBlock()
 	{
 		if ( Instance != null )
-			return Instance.blockGrid[Random.Range(0,Instance.gridWidth),Random.Range(0,Instance.gridHeight)].BlockInfo;
+			return Instance.BlockGrid[Random.Range(0,Instance.gridWidth),Random.Range(0,Instance.gridHeight)].BlockInfo;
 		return null;
 	}
 
@@ -141,9 +186,9 @@ public class BattleField : MonoBehaviour {
 
 		for (int i = 0; i < Instance.gridWidth; ++i)
 			for (int j = 0; j < Instance.gridHeight; ++j) {
-				if (Instance.blockGrid [i, j].BlockInfo.state == Block.BlockState.Hero) {
-					if (Instance.blockGrid [i, j].GetHeroInfo ().TeamColor != myTeamColor) {
-						list.Add (Instance.blockGrid [i, j].BlockInfo);
+				if (Instance.BlockGrid [i, j].BlockInfo.state == Block.BlockState.Hero) {
+					if (Instance.BlockGrid [i, j].GetHeroInfo ().TeamColor != myTeamColor) {
+						list.Add (Instance.BlockGrid [i, j].BlockInfo);
 					}
 				}
 			}
@@ -158,9 +203,9 @@ public class BattleField : MonoBehaviour {
 
 		for (int i = 0; i < Instance.gridWidth; ++i)
 			for (int j = 0; j < Instance.gridHeight; ++j) {
-				if (Instance.blockGrid [i, j].BlockInfo.state == Block.BlockState.Hero) {
-					if (Instance.blockGrid [i, j].GetHeroInfo ().TeamColor != myTeamColor) {
-						list.Add (Instance.blockGrid [i, j].BlockInfo.SimpleBlock);
+				if (Instance.BlockGrid [i, j].BlockInfo.state == Block.BlockState.Hero) {
+					if (Instance.BlockGrid [i, j].GetHeroInfo ().TeamColor != myTeamColor) {
+						list.Add (Instance.BlockGrid [i, j].BlockInfo.SimpleBlock);
 					}
 				}
 			}
@@ -175,13 +220,14 @@ public class BattleField : MonoBehaviour {
 
 	static public void ShowBlock( SimBlock[] blockList , BattleBlock.BlockVisualType type , bool isReset = true )
 	{
+		Debug.Log ("Set to " + type);
 		if ( isReset )
 			ResetVisualColor( true );
 		
 		foreach( SimBlock sb in blockList )
 		{
 			if ( IsBlockInRange( sb ))
-				Instance.blockGrid[sb.m_i,sb.m_j].visualType = type;
+				Instance.BlockGrid[sb.m_i,sb.m_j].visualType = type;
 		}
 	}
 
@@ -203,8 +249,8 @@ public class BattleField : MonoBehaviour {
 	{
 		for (int i = 0; i < Instance.gridWidth; ++i)
 			for (int j = 0; j < Instance.gridHeight; ++j) {
-				if ( Instance.blockGrid[i,j].BlockInfo.state == Block.BlockState.Empty || withHero)
-					Instance.blockGrid [i, j].visualType = BattleBlock.BlockVisualType.Normal;
+				if ( Instance.BlockGrid[i,j].BlockInfo.state == Block.BlockState.Empty || withHero)
+					Instance.BlockGrid [i, j].visualType = BattleBlock.BlockVisualType.Normal;
 			}
 	}
 
@@ -212,7 +258,7 @@ public class BattleField : MonoBehaviour {
 	{
 		for (int i = 0; i < Instance.gridWidth; ++i)
 			for (int j = 0; j < Instance.gridHeight; ++j) {
-				Instance.blockGrid[i,j].BlockInfo.isLock = (Instance.blockGrid[i,j].BlockInfo.state == Block.BlockState.Hero);
+				Instance.BlockGrid[i,j].BlockInfo.isLock = (Instance.BlockGrid[i,j].BlockInfo.state == Block.BlockState.Hero);
 			}
 	}
 
@@ -302,5 +348,58 @@ public class BattleField : MonoBehaviour {
 			break;
 		};
 		return Direction.Up;
+	}
+
+
+	public static Dictionary<Hero,Hero> virtualHeroMap = new Dictionary<Hero, Hero>();
+	public static List<Hero> virtualHeroList = new List<Hero> ();
+
+	public static void SetUpVirtualHeros()
+	{
+		for (int i = 0; i < Instance.gridWidth; ++i)
+			for (int j = 0; j < Instance.gridHeight; ++j) {
+				if ( Instance.m_normalBlockGrid [i, j].State == Block.BlockState.Hero ) {
+					HeroType type = Instance.m_normalBlockGrid [i, j].GetHeroInfo ().type;
+					Hero hero = HeroFactory.SetupVirtualHero (type);
+					virtualHeroList.Add (hero);
+					virtualHeroMap [Instance.m_normalBlockGrid [i, j].GetHeroInfo ().parent] = hero;
+					Instance.m_virtualBlockGrid [i, j].RegisterHero (hero);
+				}
+			}
+		
+	}
+
+	public static void CopyFromRealToVirtual()
+	{
+		if (virtualHeroList.Count <= 0)
+			SetUpVirtualHeros ();
+		
+		for (int i = 0; i < Instance.gridWidth; ++i)
+			for (int j = 0; j < Instance.gridHeight; ++j) {
+				Instance.m_virtualBlockGrid [i, j].ResetAll ();
+			}
+		for (int i = 0; i < Instance.gridWidth; ++i)
+			for (int j = 0; j < Instance.gridHeight; ++j) {
+				if ( Instance.m_normalBlockGrid [i, j].State == Block.BlockState.Hero ) {
+					Hero normalHero = Instance.m_normalBlockGrid [i, j].GetHeroInfo ().parent;
+					Hero virtualHero = virtualHeroMap [normalHero];
+					virtualHero.SetBlock (new SimBlock (i, j));
+					Instance.m_virtualBlockGrid [i, j].RegisterHero (virtualHero);
+				}
+			}
+
+		foreach (KeyValuePair<Hero,Hero> kv in virtualHeroMap) {
+			kv.Value.GetHeroInfo ().DeepCopy (kv.Key.GetHeroInfo (), virtualHeroMap);
+		}
+	}
+
+	public static void StartVirtual()
+	{
+		Instance.m_battleFieldState = BattleFieldState.Virtual;
+	}
+
+	public static void EndVirtual()
+	{
+		Instance.m_battleFieldState = BattleFieldState.Normal;
 	}
 }

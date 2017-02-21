@@ -14,6 +14,8 @@ public class Hero : MBehavior {
 	public Attack Attack { get { return m_attack; }}
 	public Move Move { get{ return m_move; } }
 	public HeroAnim HeroAnim { get{ return m_heroAnim; } }
+	public Strategy Strategy { get{ return m_strategy; } }
+	public Passive Passive { get{ return m_passive; } }
 
 	public bool isVirtual = false;
 
@@ -100,13 +102,9 @@ public class Hero : MBehavior {
 	}
 
 	// Set and move to target block
-	public void SetBlock( SimBlock block )
+	virtual public void SetBlock( SimBlock block )
 	{
 		TemBlock = BattleField.GetBlock( block );
-
-		Block b = BattleField.GetBlock( block );
-		if ( b != null )
-			transform.position = b.GetCenterPosition();
 	}
 		
 
@@ -129,12 +127,16 @@ public class Hero : MBehavior {
 		targetBlock = BattleField.GetBlock( m_strategy.GetTarget ());
 		targetDirection = m_strategy.GetDirection ();
 
+
 		bool isBlock = targetBlock.isLock;
-		if ( isBlock ) {
+		if (isBlock) {
 //			targetBlock = GetNearestBlock(targetBlock);
 //			if ( targetBlock == null )
-				targetBlock = TemBlock;
-			UnableToMove();
+			BattleField.ShowBlock (new SimBlock[] { targetBlock.SimpleBlock }, BattleBlock.BlockVisualType.BattleMoveTargetBlocked, true);
+			targetBlock = TemBlock;
+			UnableToMove ();
+		} else {
+			BattleField.ShowBlock( new SimBlock[] {targetBlock.SimpleBlock} , BattleBlock.BlockVisualType.BattleMoveTarget , true);
 		}
 		TemBlock.isLock = false;
 		targetBlock.isLock = true;
@@ -181,7 +183,7 @@ public class Hero : MBehavior {
 	/// <returns>The move.</returns>
 	public virtual float BattleMove (){
 		TemBlock = targetBlock;
-		GetHeroInfo ().direction = targetDirection;
+		GetHeroInfo ().Direction = targetDirection;
 
 		if ( m_heroAnim != null )
 		{
