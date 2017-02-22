@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class Strategy : HeroComponent {
 
+	public virtual void OnBeginBattle()
+	{
+	}
+
 	public virtual SimBlock GetTarget()
 	{
 		return parent.TemSimpleBlock;

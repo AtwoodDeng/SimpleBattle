@@ -113,8 +113,10 @@ public class Hero : MBehavior {
 		if ( m_passive != null )
 			m_passive.BeginBattle();
 
-		if ( m_strategy != null )
+		if ( m_strategy != null ) {
 			GetHeroInfo().isActive = m_strategy.GetActive();
+			m_strategy.OnBeginBattle();
+		}
 	}
 
 	/// <summary>
@@ -133,10 +135,13 @@ public class Hero : MBehavior {
 //			targetBlock = GetNearestBlock(targetBlock);
 //			if ( targetBlock == null )
 			BattleField.ShowBlock (new SimBlock[] { targetBlock.SimpleBlock }, BattleBlock.BlockVisualType.BattleMoveTargetBlocked, true);
+			BattleField.ShowBlock( new SimBlock[]{ TemSimpleBlock } , BattleBlock.BlockVisualType.BattleThisHero , false);
 			targetBlock = TemBlock;
 			UnableToMove ();
 		} else {
-			BattleField.ShowBlock( new SimBlock[] {targetBlock.SimpleBlock} , BattleBlock.BlockVisualType.BattleMoveTarget , true);
+			
+			BattleField.ShowBlock( new SimBlock[] { targetBlock.SimpleBlock} , BattleBlock.BlockVisualType.BattleMoveTarget , true);
+			BattleField.ShowBlock( new SimBlock[]{ TemSimpleBlock } , BattleBlock.BlockVisualType.BattleThisHero , false);
 		}
 		TemBlock.isLock = false;
 		targetBlock.isLock = true;
@@ -194,7 +199,10 @@ public class Hero : MBehavior {
 
 	public virtual void EndMove()
 	{
-		
+		if ( m_heroAnim != null )
+		{
+			BattleField.ResetVisualColor(true);
+		}
 	}
 
 	/// <summary>
@@ -215,7 +223,7 @@ public class Hero : MBehavior {
 		{
 			BattleField.ShowBlock( m_attack.GetAttackRange() , BattleBlock.BlockVisualType.BattleAttackRange );
 			BattleField.ShowBlock( m_attack.GetTargetBlock() , BattleBlock.BlockVisualType.BattleAttackTarget , false);
-			BattleField.ShowBlock( new SimBlock[]{ TemSimpleBlock } , BattleBlock.BlockVisualType.BattleAttackHero , false);
+			BattleField.ShowBlock( new SimBlock[]{ TemSimpleBlock } , BattleBlock.BlockVisualType.BattleThisHero , false);
 			// the damage will be sent during the animation
 			return m_heroAnim.Attack( dmgs , m_attack.GetTargetBlock() , m_attack.GetAttackRange() );
 		}else{

@@ -220,7 +220,7 @@ public class BattleField : MonoBehaviour {
 
 	static public void ShowBlock( SimBlock[] blockList , BattleBlock.BlockVisualType type , bool isReset = true )
 	{
-		Debug.Log ("Set to " + type);
+//		Debug.Log ("Set to " + type);
 		if ( isReset )
 			ResetVisualColor( true );
 		

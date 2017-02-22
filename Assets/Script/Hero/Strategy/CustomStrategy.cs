@@ -23,12 +23,13 @@ public class CustomStrategy : Strategy {
 	public bool isActive;
 	public override SimBlock GetTarget ()
 	{
-		if (BattleField.GetBlock( target ).state == Block.BlockState.Empty) {
-			return target;
-		}
-
-		// TODO : remove the else situation
-		return parent.TemSimpleBlock;
+		return target;
+//		if (BattleField.GetBlock( target ).state == Block.BlockState.Empty) {
+//			return target;
+//		}
+//
+//		// TODO : remove the else situation
+//		return parent.TemSimpleBlock;
 	}
 
 	public override Direction GetDirection ()

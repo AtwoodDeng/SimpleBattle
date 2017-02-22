@@ -20,7 +20,7 @@ public class BattleBlock : MonoBehaviour {
 		// confirm a hero's move, then the hero's block will change to this 
 		StrategyConfirm,
 		// in battle, when attack, shows the attack hero
-		BattleAttackHero,
+		BattleThisHero,
 		// in battle, when attack, shows the attack range
 		BattleAttackRange,
 		// in battle, when attack, shows the attack range
@@ -99,10 +99,11 @@ public class BattleBlock : MonoBehaviour {
 					BackgroundSetColor(colorSetting.BattleMoveTarget);
 					break;
 				case BlockVisualType.BattleMoveTargetBlocked:
+					
 					BackgroundSetColor(colorSetting.BattleMoveTargetBlocked);
 					break;
-				case BlockVisualType.BattleAttackHero:
-					BackgroundSetColor(colorSetting.BattleAttackHero);
+				case BlockVisualType.BattleThisHero:
+					BackgroundSetColor(colorSetting.BattleThisHero);
 					break;
 				case BlockVisualType.BattleAttackRange:
 					BackgroundSetColor(colorSetting.BattleAttackRange);
@@ -135,7 +136,7 @@ public class BattleBlock : MonoBehaviour {
 		public Color StrategyConfirmColor;
 		public Color BattleMoveTarget;
 		public Color BattleMoveTargetBlocked;
-		public Color BattleAttackHero;
+		public Color BattleThisHero;
 		public Color BattleAttackRange;
 		public Color BattleAttackRangeHero;
 		public Color BattleMoveRangeEnermy;
@@ -159,7 +160,7 @@ public class BattleBlock : MonoBehaviour {
 
 	public void RefreshColorByBlock()
 	{
-		Debug.Log ("RefreshColorByBlock");
+//		Debug.Log ("RefreshColorByBlock");
 		switch( m_block.state )
 		{
 		case Block.BlockState.Empty:

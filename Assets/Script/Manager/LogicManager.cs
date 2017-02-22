@@ -20,6 +20,7 @@ public class LogicManager : MBehavior {
 	public bool isOnline;
 
 	public static float moveDuration = 0.8f;
+	public static float targetInterval = 0.5f;
 	public static float moveInterval = 0.1f;
 	public static float attackDuration = 1f;
 	public static float attackInterval = 0.1f;
@@ -188,6 +189,7 @@ public class LogicManager : MBehavior {
 			for (int i = 0; i < list.Length; ++i) {
 				list [i].BattleTarget ();
 			}
+			yield return new WaitForSeconds( targetInterval );
 
 			// Move
 			for (int i = 0; i < list.Length; ++i) {
@@ -247,6 +249,7 @@ public class LogicManager : MBehavior {
 			for (int i = 0; i < list.Length; ++i) {
 				if (!list [i].GetHeroInfo ().IsDead) {
 					bool canAttack = list [i].BattleTarget ();
+					yield return new WaitForSeconds( targetInterval );
 					float moveDuration = list [i].BattleMove ();
 					yield return new WaitForSeconds ( moveDuration );
 					yield return new WaitForSeconds ( moveInterval );
@@ -293,6 +296,7 @@ public class LogicManager : MBehavior {
 				if ( list[i].GetHeroInfo().isActive )
 					list [i].BattleTarget ();
 			}
+			yield return new WaitForSeconds( targetInterval );
 
 			// Move
 			for (int i = 0; i < list.Length; ++i) {
