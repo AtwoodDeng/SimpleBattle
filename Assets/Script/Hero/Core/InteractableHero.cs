@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class InteractableHero : Hero {
-
-
-
 	protected Vector2 delta;
 	protected BattleBlock TriggerBlock{
 		get{

@@ -44,6 +44,15 @@ public class Hero : MBehavior {
 	Block targetBlock;
 	Direction targetDirection;
 
+	/// <summary>
+	/// Determines whether this instance's strategy is ready to decide which location to move
+	/// </summary>
+	/// <returns><c>true</c> if this instance is ready; otherwise, <c>false</c>.</returns>
+	public bool IsReady()
+	{
+		return m_strategy.IsReady ();
+	}
+
 
 	virtual public HeroInfo GetHeroInfo()
 	{
@@ -106,7 +115,13 @@ public class Hero : MBehavior {
 	{
 		TemBlock = BattleField.GetBlock( block );
 	}
-		
+
+	public virtual void BeforeBattle()
+	{
+		if (m_strategy != null) {	
+			m_strategy.OnBeforeBattle ();
+		}
+	}
 
 	public virtual void BeginBattle()
 	{
@@ -309,5 +324,10 @@ public class Hero : MBehavior {
 		res.type = GetHeroInfo().type;
 		res.isActive = m_strategy.GetActive();
 		return res;
+	}
+
+	public SimBlock[] GetAttackRangeInTarget( SimBlock target , Direction direction )
+	{
+		return m_attack.GetAttackRange (target, direction, GetHeroInfo ().AttackRange);
 	}
 }

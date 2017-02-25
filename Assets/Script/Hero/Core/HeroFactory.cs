@@ -8,7 +8,7 @@ public class HeroFactory {
 	{
 		GameObject heroObj = CreateHeroByType( type );
 		Hero hero = heroObj.AddComponent<VirtualHero>();
-		heroObj.AddComponent<RandomStrategy> ();
+		heroObj.AddComponent<AIVirtualStrategy> ();
 		hero.Init();
 //		hero.GetHeroInfo ().DeepCopy (info);
 

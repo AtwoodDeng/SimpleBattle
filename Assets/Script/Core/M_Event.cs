@@ -19,24 +19,18 @@ public enum LogicEvents
 	ConfirmHero = 101,
 	ConfirmMove = 102,
 
+	AutoBattle = 130,
+
 	// ===== network =====
 	NetPlaceHero = 201,
 	NetMoveHero = 202,
+
+	// ===== UI ======
+	UIAutoBattle = 301,
+
 }
 
 public class M_Event : MonoBehaviour {
-
-	/// <summary>
-	/// Event handler. handle the event with basic arg
-	/// </summary>
-	public delegate void EventHandler(BasicArg arg);
-
-	/// <summary>
-	/// an example for the normal event
-	/// </summary>
-	public static event EventHandler StartApp;
-	public static void FireStartApp(BasicArg arg){if ( StartApp != null ) StartApp(arg) ; }
-
 
 	/// <summary>
 	/// Handler specified for dealing with the logic events

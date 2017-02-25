@@ -16,6 +16,12 @@ public class CustomStrategy : Strategy {
 	}
 	float m_angle;
 
+	public override void OnBeforeBattle ()
+	{
+		base.OnBeforeBattle ();
+		target = new SimBlock (parent.TemSimpleBlock);
+	}
+
 	public Direction direction;
 	/// <summary>
 	/// is the hero able to move in this turn
@@ -45,6 +51,13 @@ public class CustomStrategy : Strategy {
 	public override bool GetActive ()
 	{
 		return isActive;
+	}
+
+	public override bool IsReady ()
+	{
+		if (GetTarget () == null)
+			return false;
+		return !GetTarget ().Equals (parent.TemSimpleBlock);
 	}
 
 }

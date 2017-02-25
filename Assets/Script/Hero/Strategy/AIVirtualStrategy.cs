@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RandomStrategy : Strategy {
+public class AIVirtualStrategy : Strategy {
 
 	public bool ifFollowNext = false;
 	public SimBlock nextBlock;
