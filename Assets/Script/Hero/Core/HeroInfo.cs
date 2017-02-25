@@ -2,21 +2,27 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HeroInfo : HeroComponent
-{
+public class HeroInfo : HeroComponent {
+
 	#region BasicData
 	/// <summary>
 	/// The heal of the hero
 	/// </summary>
 	public float m_health;
+	public float m_maxHealth;
 	public float Health{
 		get{
-			return m_health;
+			return Mathf.Clamp( m_health , 0 , m_maxHealth);
 		}
 		set {
 			if ( HealthChangeFunc !=null )
 				HealthChangeFunc (m_health, value);
 			m_health = value;
+		}
+	}
+	public float HealthRate{
+		get {
+			return m_health / (m_maxHealth + 0.001f);
 		}
 	}
 	/// <summary>
@@ -131,8 +137,11 @@ public class HeroInfo : HeroComponent
 	public event HealthChangeHandler HealthChangeFunc;
 	public event DeathHandler DeathFunc;
 	public event TeamColorHandler TeamColorFunc;
-	public bool IsDead {
-		get { return Health <= 0; }
+//	public bool IsDead {
+//		get { return Health <= 0; }
+//	}
+	public bool IsAlive {
+		get { return Health > 0;	}
 	}
 
 	static int LocalHeroIDCounter = 0;
@@ -142,13 +151,13 @@ public class HeroInfo : HeroComponent
 		base.Init (hero);
 		ID = NetworkManager.ClientID * 1000 + LocalHeroIDCounter++;
 		m_agile += Random.Range( -0.1f , 0.1f );
+		m_maxHealth = m_health;
 	}
 
 	public void Init( RawHeroInfo info )
 	{
 		ID = info.ID;
 		m_agile = info.aglie;
-
 	}
 
 	public HeroInfo()
@@ -293,7 +302,7 @@ public class HeroInfo : HeroComponent
 
 	public void RecieveDamage( Damage dmg ) 
 	{
-		if (!IsDead) {
+		if (IsAlive) {
 			Health -= Mathf.Clamp (dmg.damage , 0, 99999f);
 			if ( dmg.buffs != null )
 			{

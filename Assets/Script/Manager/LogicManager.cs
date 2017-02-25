@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class LogicManager : MBehavior {
-
-
 	static public LogicManager Instance {
 		get {
 			if (m_Instance == null)
@@ -18,6 +16,16 @@ public class LogicManager : MBehavior {
 	static public LogicManager m_Instance;
 
 	public bool isOnline;
+	public bool isAI;
+	public bool isAutoPlay;
+	public static bool IsAutoPlay
+	{
+		get {
+			if (Instance != null)
+				return Instance.isAutoPlay;
+			return false;
+		}
+	}
 
 	public static float moveDuration = 0.8f;
 	public static float targetInterval = 0.5f;
@@ -26,6 +34,7 @@ public class LogicManager : MBehavior {
 	public static float attackInterval = 0.1f;
 	// interval between different phase and two hero's move
 	public static float basicInterval = 0.5f;
+	public static float AIStrategyTime = 5f;
 
 	public int Round
 	{
@@ -53,9 +62,23 @@ public class LogicManager : MBehavior {
 		Battle,
 		Count,
 	}
-	public State State_{
+	static public State MState{
 		get { 
-			return m_stateMachine.State;
+			if (Instance == null)
+				return State.None;
+			return Instance.m_stateMachine.State;
+		}
+	}
+	private float m_stateStartTimer;
+	/// <summary>
+	/// The seconds from the temperary has started
+	/// </summary>
+	/// <value>The state time.</value>
+	static public float StateTime{
+		get{
+			if (Instance == null)
+				return 0;
+			return Time.time - Instance.m_stateStartTimer;
 		}
 	}
 
@@ -69,6 +92,23 @@ public class LogicManager : MBehavior {
 		InitStateMachine ();
 	}
 
+	protected override void MStart ()
+	{
+		base.MStart ();
+		//		heroList.AddRange (FindObjectsOfType<Hero> ());
+
+		m_stateMachine.State = State.PlaceHero;
+	}
+
+	// Update is called once per frame
+	void Update () {
+		if (Input.GetKeyDown (KeyCode.Space)) {
+			NextPhase ();
+		}
+		m_stateMachine.Update ();
+	}
+
+	#region StateMachine
 	void InitStateMachine()
 	{
 		m_stateMachine = new AStateMachine<State, LogicEvents> (State.None);
@@ -97,6 +137,13 @@ public class LogicManager : MBehavior {
 		m_stateMachine.AddEnter (State.Strategy, delegate {
 			M_Event.FireLogicEvent(LogicEvents.StrategyPhase , new LogicArg(this));
 			OnBeforeBattle(heroList.ToArray());
+			RecordTime();
+
+		});
+
+		m_stateMachine.AddUpdate (State.Strategy, delegate() {
+			if ( IsAutoPlay )
+				m_stateMachine.State = State.WaitStrategy;	
 		});
 
 		m_stateMachine.AddEnter( State.WaitStrategy , delegate {
@@ -105,13 +152,23 @@ public class LogicManager : MBehavior {
 				List<HeroMoveInfo> heros = new List<HeroMoveInfo>();
 				foreach( Hero h in heroList )
 				{
-					if ( h.GetHeroInfo().TeamColor == TeamColor.Blue && !h.GetHeroInfo().IsDead)
+					if ( h.GetHeroInfo().TeamColor == TeamColor.Blue && h.GetHeroInfo().IsAlive)
 						heros.Add( h.GetMoveInfo() );
 				}
 				Debug.Log("Send Move Hero");
 				NetworkManager.Instance.SendMoveHero( heros.ToArray() );
-			}else {
+			}else if ( isAI ) {
+			
+			}else
+			{
 				m_stateMachine.State = State.Battle;
+			}
+		});
+
+		m_stateMachine.AddUpdate (State.WaitStrategy, delegate {
+			if ( isAI ) {
+				if ( IsAllReady(TeamColor.Blue) && IsAllReady( TeamColor.Red ))
+					m_stateMachine.State = State.Battle;
 			}
 		});
 
@@ -124,32 +181,25 @@ public class LogicManager : MBehavior {
 
 	}
 
+	void RecordTime()
+	{
+		m_stateStartTimer = Time.time;
+	}
+
+	#endregion
+
+
+
+	#region Battle
+	/// <summary>
+	/// Called When the game is initialized
+	/// </summary>
 	public void InitGame()
 	{
 		m_round = 0;
 	}
-
-	public void RegisterHero( Hero h )
-	{
-		if ( !heroList.Contains(h) )
-			heroList.Add(h);
-	}
-
-	public void UnregisterHero( Hero h )
-	{
-		heroList.Remove(h);
-	}
-
-	protected override void MStart ()
-	{
-		base.MStart ();
-//		heroList.AddRange (FindObjectsOfType<Hero> ());
-
-		m_stateMachine.State = State.PlaceHero;
-	}
-
 	/// <summary>
-	/// Call all hero .BeginBattle
+	/// Call all hero .BeforeBattle
 	/// and increae the number of round
 	/// </summary>
 	void OnBeforeBattle( Hero[] heros )
@@ -159,12 +209,15 @@ public class LogicManager : MBehavior {
 		Hero[] list = GetSortedHeroList ( heros );
 
 		for (int i = 0; i < list.Length; ++i) {
-			list [i].BeginBattle ();
+			list [i].BeforeBattle ();
 		}
 	}
-
+	/// <summary>
+	/// Start the battle coroutine
+	/// </summary>
 	void OnBattle(){
 		StartCoroutine (DoBattle());
+		RecordTime ();
 	}
 
 	IEnumerator DoBattle()
@@ -202,7 +255,7 @@ public class LogicManager : MBehavior {
 
 			// Battle
 			for (int i = 0; i < list.Length; ++i) {
-				if (!list [i].GetHeroInfo ().IsDead) {
+				if (list [i].GetHeroInfo ().IsAlive) {
 	//				Debug.Log ("Begin Attack " + list [i].name);
 					float duration = list [i].BattleAttack ();
 					yield return new WaitForSeconds (duration + attackInterval);
@@ -212,7 +265,7 @@ public class LogicManager : MBehavior {
 
 			// End
 			for (int i = 0; i < list.Length; ++i) {
-				if (!list [i].GetHeroInfo ().IsDead) {
+				if (list [i].GetHeroInfo ().IsAlive) {
 					list[i].EndBattle();
 				}
 			}
@@ -247,7 +300,7 @@ public class LogicManager : MBehavior {
 
 			// Battle
 			for (int i = 0; i < list.Length; ++i) {
-				if (!list [i].GetHeroInfo ().IsDead) {
+				if (list [i].GetHeroInfo ().IsAlive) {
 					bool canAttack = list [i].BattleTarget ();
 					yield return new WaitForSeconds( targetInterval );
 					float moveDuration = list [i].BattleMove ();
@@ -267,7 +320,7 @@ public class LogicManager : MBehavior {
 
 			// End
 			for (int i = 0; i < list.Length; ++i) {
-				if (!list [i].GetHeroInfo ().IsDead) {
+				if (list [i].GetHeroInfo ().IsAlive) {
 					list[i].EndBattle();
 				}
 			}
@@ -312,7 +365,7 @@ public class LogicManager : MBehavior {
 			// Battle
 			for (int i = 0; i < list.Length; ++i) {
 				if ( list[i].GetHeroInfo().isActive ) {
-					if (!list [i].GetHeroInfo ().IsDead) {
+					if (list [i].GetHeroInfo ().IsAlive) {
 						//				Debug.Log ("Begin Attack " + list [i].name);
 						float duration = list [i].BattleAttack ();
 						yield return new WaitForSeconds (duration + attackInterval);
@@ -323,7 +376,7 @@ public class LogicManager : MBehavior {
 
 			// End
 			for (int i = 0; i < list.Length; ++i) {
-				if (!list [i].GetHeroInfo ().IsDead) {
+				if (list [i].GetHeroInfo ().IsAlive) {
 					list[i].EndBattle();
 				}
 			}
@@ -335,11 +388,13 @@ public class LogicManager : MBehavior {
 	}
 
 	/// <summary>
-	/// Start a virtual Battle 
+	/// Start a virtual battle
 	/// </summary>
-	/// <returns>The the winning team, if no team wins, return None.</returns>
+	/// <returns>The power of the result, return -0.001 if even.</returns>
 	/// <param name="virtualheroList">Virtualhero list.</param>
-	public TeamColor VirtualBattle( Hero[] virtualheroList )
+	/// <param name="which">which team to detect.</param>
+	/// <param name="forceResult">If set to <c>true</c> force result.</param>
+	public float VirtualBattle( Hero[] virtualheroList , TeamColor which, bool forceResult = false )
 	{
 		if ( mode == Mode.InOrderBattle )	
 		{
@@ -361,37 +416,71 @@ public class LogicManager : MBehavior {
 
 			// Battle
 			for (int i = 0; i < list.Length; ++i) {
-				if (!list [i].GetHeroInfo ().IsDead) {
+				if (list [i].GetHeroInfo ().IsAlive) {
 					bool canAttack = list [i].BattleTarget ();
 					list [i].BattleMove ();
 					list[i].EndMove();
-					if ( canAttack ) {
+					if (canAttack) {
 						list [i].BattleAttack ();
-						list[i].EndAttack();
+						list [i].EndAttack ();
+					} else {
+//						Debug.Log ("**=" + list [i].name + " is blocked");
 					}
 				}
 			}
-
+//			foreach (Hero h in list) {
+//				Debug.Log(string.Format("  ={0}: pos {1} dir {2} heal {3} " ,
+//					h.name , h.TemSimpleBlock , h.GetHeroInfo().Direction , h.GetHeroInfo().Health));
+//			}
 			// End
 			for (int i = 0; i < list.Length; ++i) {
-				if (!list [i].GetHeroInfo ().IsDead) {
+				if (list [i].GetHeroInfo ().IsAlive) {
 					list[i].EndBattle();
 				}
 			}
 		}
 
-		bool[] isAllDead = new bool[2];
-		for( int i = 0 ; i < isAllDead.Length ; ++ i )
-			isAllDead[i] = true;
-		foreach (Hero h in virtualheroList)
-			if (!h.GetHeroInfo ().IsDead)
-				isAllDead [(int)h.GetHeroInfo ().TeamColor] = false;
-		if (isAllDead [(int)TeamColor.Blue] && !isAllDead [(int)TeamColor.Red])
-			return TeamColor.Red;
-		else if (isAllDead [(int)TeamColor.Red] && !isAllDead [(int)TeamColor.Blue])
-			return TeamColor.Blue;
+		if (forceResult) {
+			float[] totalHealthRate = new float[2];
+			for (int i = 0; i < totalHealthRate.Length; ++i)
+				totalHealthRate [i] = 0;
+			foreach (Hero h in virtualheroList) {
+				totalHealthRate [(int)h.GetHeroInfo ().TeamColor] += h.GetHeroInfo().HealthRate;
+			}
+			float healthBlue = totalHealthRate [(int)TeamColor.Blue] + 0.0001f;
+			float healthRed = totalHealthRate [(int)TeamColor.Red] + 0.0001f;
+			if (which == TeamColor.Blue) {
+				return Mathf.Pow( healthBlue / (healthBlue + healthRed) , 2f );
+			}
+			return Mathf.Pow( healthRed / (healthRed + healthBlue) , 2f );
+		} else {
+			bool[] isAllDead = new bool[2];
+			for (int i = 0; i < isAllDead.Length; ++i)
+				isAllDead [i] = true;
+			foreach (Hero h in virtualheroList)
+				if (h.GetHeroInfo ().IsAlive)
+					isAllDead [(int)h.GetHeroInfo ().TeamColor] = false;
+			if (isAllDead [(int)TeamColor.Blue] && !isAllDead [(int)TeamColor.Red])
+				return ( which == TeamColor.Red)? 1.0f : 0 ;
+			else if (isAllDead [(int)TeamColor.Red] && !isAllDead [(int)TeamColor.Blue])
+				return ( which == TeamColor.Blue)? 1.0f : 0;
+		}
+		return -0.0001f;
+	}
+	#endregion
 
-		return TeamColor.None;
+	#region HeroList
+
+
+	public void RegisterHero( Hero h )
+	{
+		if ( !heroList.Contains(h) )
+			heroList.Add(h);
+	}
+
+	public void UnregisterHero( Hero h )
+	{
+		heroList.Remove(h);
 	}
 
 	Hero[] GetSortedHeroList( Hero[] heros )
@@ -399,7 +488,7 @@ public class LogicManager : MBehavior {
 		// TODO sort the hero according to the agile
 		List<Hero> temList = new List<Hero>( heros );
 		for (int i = temList.Count -1; i >= 0 ; --i)
-			if (temList [i].GetHeroInfo().IsDead)
+			if (!temList [i].GetHeroInfo().IsAlive)
 				temList.RemoveAt (i);
 		
 		temList.Sort ((x, y) => {
@@ -408,13 +497,25 @@ public class LogicManager : MBehavior {
 
 		return temList.ToArray ();
 	}
-	
-	// Update is called once per frame
-	void Update () {
-		if (Input.GetKeyDown (KeyCode.Space)) {
-			NextPhase ();
+
+	/// <summary>
+	/// Determines whether this team is all ready for battle
+	/// (the strategy has done its calculation )
+	/// </summary>
+	/// <returns><c>true</c> if this instance is all ready the specified team; otherwise, <c>false</c>.</returns>
+	/// <param name="team">Which team.</param>
+	public bool IsAllReady( TeamColor team )
+	{
+		bool res = true;
+		foreach (Hero h in heroList) {
+			if (h.GetHeroInfo ().TeamColor == team && !h.IsReady () && h.GetHeroInfo().IsAlive)
+				res = false;
 		}
+		return res;
 	}
+
+	#endregion
+
 
 	public void NextPhase()
 	{
@@ -435,6 +536,7 @@ public class LogicManager : MBehavior {
 		base.MOnEnable ();
 		M_Event.RegisterEvent(LogicEvents.NetPlaceHero , OnPlaceHeroNetwork );
 		M_Event.RegisterEvent(LogicEvents.NetMoveHero , OnMoveHeroNetwork );
+		M_Event.RegisterEvent(LogicEvents.UIAutoBattle , OnAutoPlay );
 	}
 
 	protected override void MOnDisable ()
@@ -442,12 +544,20 @@ public class LogicManager : MBehavior {
 		base.MOnDisable ();
 		M_Event.UnregisterEvent(LogicEvents.NetPlaceHero , OnPlaceHeroNetwork );
 		M_Event.UnregisterEvent(LogicEvents.NetMoveHero , OnMoveHeroNetwork );
+		M_Event.UnregisterEvent(LogicEvents.UIAutoBattle , OnAutoPlay );
+	}
+
+
+	void OnAutoPlay( LogicArg arg )
+	{
+		isAutoPlay = (bool) arg.GetMessage ("ifAuto");
+		M_Event.FireLogicEvent (LogicEvents.AutoBattle, new LogicArg (this));
 	}
 
 	/// Network
 	void OnPlaceHeroNetwork( LogicArg arg )
 	{
-		if ( m_stateMachine.State == State.WaitPlaceHero )
+		if ( MState == State.WaitPlaceHero )
 		{
 			PlaceHeroMessage msg = (PlaceHeroMessage)arg.GetMessage("msg");
 			foreach( RawHeroInfo hInfo in msg.heroInfo )
@@ -463,7 +573,7 @@ public class LogicManager : MBehavior {
 
 	void OnMoveHeroNetwork( LogicArg arg )
 	{
-		if ( LogicManager.Instance.State_ == LogicManager.State.WaitStrategy )
+		if ( MState == LogicManager.State.WaitStrategy )
 		{
 			Debug.Log("Get Move MSG");
 			MoveHeroMessage msg = (MoveHeroMessage)arg.GetMessage("msg");

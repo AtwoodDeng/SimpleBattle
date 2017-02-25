@@ -393,6 +393,12 @@ public class BattleField : MonoBehaviour {
 		}
 	}
 
+	public static BattleFieldState TemFieldState{
+		get {
+			return Instance.m_battleFieldState;
+		}
+	}
+
 	public static void StartVirtual()
 	{
 		Instance.m_battleFieldState = BattleFieldState.Virtual;

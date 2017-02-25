@@ -145,6 +145,12 @@ public class BattleBlock : MonoBehaviour {
 	};
 	[SerializeField] BlockColorSetting colorSetting;
 
+	public bool IsPlayAnimation{
+		get {
+			return !IsVirtual;
+		}
+	}
+
 	public Block.BlockState State{
 		get { return state; }
 	}
@@ -283,7 +289,8 @@ public class BattleBlock : MonoBehaviour {
 	public void EnterHero( Hero h )
 	{
 		if (state == Block.BlockState.Empty && IsPlacable) {
-			background.DOColor (new Color (0.5f, 0.5f, 1f), 0.2f);
+//			background.DOColor (new Color (0.5f, 0.5f, 1f), 0.2f);
+			BackgroundSetColor( new Color( 0.5f , 0.5f , 1f ));
 		}
 	}
 
@@ -291,7 +298,8 @@ public class BattleBlock : MonoBehaviour {
 	{
 		if (state == Block.BlockState.Empty ) {
 
-			background.DOColor ( Color.white , 0.2f);
+//			background.DOColor ( Color.white , 0.2f);
+			BackgroundSetColor( Color.white );
 		}
 	}
 
@@ -306,20 +314,27 @@ public class BattleBlock : MonoBehaviour {
 		}
 	}
 
-	public void BackgroundShine( Color col ){
-		background.DOKill ();
-		background.DOColor (col, 0.5f).SetLoops (9999, LoopType.Yoyo);
-
+	public void BackgroundShine( Color col , float alpha = 1f ){
+		if (IsPlayAnimation) {
+			background.DOKill ();
+			col.a = alpha;
+			background.DOColor (col, 0.5f).SetLoops (9999, LoopType.Yoyo);
+		}
 	}
 
-	private void BackgroundSetColor( Color col ){
-		background.DOKill ();
-		background.DOColor (col,0.2f);
+	private void BackgroundSetColor( Color col , float alpha = 1f ){
+		if (IsPlayAnimation) {
+			background.DOKill ();
+			col.a = alpha;
+			background.DOColor (col, 0.2f);
+		}
 	}
 
 	private void BackgroundReset(){
-		background.DOKill ();
-		background.DOColor (Color.white,0);
+		if (IsPlayAnimation) {
+			background.DOKill ();
+			background.DOColor (Color.white, 0);
+		}
 	}
 
 	public void ResetVisual()

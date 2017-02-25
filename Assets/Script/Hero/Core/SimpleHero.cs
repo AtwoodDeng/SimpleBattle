@@ -16,6 +16,8 @@ public class SimpleHero : InteractableHero {
 		StrategyChoose,
 		StrategyDirection,
 		StrategyConfirm,
+		StrategyAuto,
+		BattleBegin,
 		BattleMove,
 		BattleAttack,
 		Dead,
@@ -111,17 +113,36 @@ public class SimpleHero : InteractableHero {
 		});
 
 		m_stateMachine.BlindFromEveryState (LogicEvents.StrategyPhase, HeroState.Strategy);
+		m_stateMachine.BlindFromEveryState (LogicEvents.AutoBattle, HeroState.Strategy);
 
-		m_stateMachine.BlindStateEventHandler (HeroState.Strategy, delegate(object obj) {
-			LogicArg arg = (LogicArg) obj;
-			if ( arg.type == LogicEvents.ConfirmHero )
-			{
-				Block block = (Block)arg.GetMessage(M_Event.BLOCK);
-				if ( TemBlock != null &&  TemBlock.Equals(block))
-				{
-					m_stateMachine.State = HeroState.StrategyChoose;
+
+		m_stateMachine.AddEnter (HeroState.Strategy, delegate {
+			if ( TemBlock == null )
+				m_stateMachine.State = HeroState.None;
+			else {
+				targetLine.enabled = false;
+				targetArrow.enabled = false;
+
+				if ( LogicManager.IsAutoPlay )
+					m_stateMachine.State = HeroState.StrategyAuto;
+				else {
+					if ( !( m_strategy is CustomStrategy) )
+					{
+						DestroyImmediate(m_strategy);
+						m_strategy = gameObject.AddComponent<CustomStrategy>();
+						m_strategy.Init(this);
+					}
+					if ( m_strategy is CustomStrategy ) {
+						((CustomStrategy)m_strategy).target = TemSimpleBlock;
+						((CustomStrategy)m_strategy).isActive = false;	
+					}
 				}
 			}
+		});
+
+		m_stateMachine.AddUpdate (HeroState.Strategy, delegate() {
+			if ( LogicManager.IsAutoPlay )
+				m_stateMachine.State = HeroState.StrategyAuto;
 		});
 
 		m_stateMachine.BlindStateEventHandler (HeroState.StrategyChoose, delegate(object obj) {
@@ -172,20 +193,6 @@ public class SimpleHero : InteractableHero {
 			}
 		});
 
-		m_stateMachine.AddEnter (HeroState.Strategy, delegate {
-			if ( TemBlock == null )
-				m_stateMachine.State = HeroState.None;
-			if ( m_strategy is CustomStrategy )
-				((CustomStrategy)m_strategy).target = TemSimpleBlock;
-
-			targetLine.enabled = false;
-			targetArrow.enabled = false;
-
-			if ( m_strategy is CustomStrategy )
-				((CustomStrategy)m_strategy).isActive = false;	
-
-		});
-
 		m_stateMachine.AddEnter (HeroState.StrategyChoose, delegate {
 			TemBlock.linkedBlock.visualType = BattleBlock.BlockVisualType.StrategyFocus;
 			BattleField.ShowBlock( m_move.GetMoveRange() , BattleBlock.BlockVisualType.StrategyMoveRange );
@@ -221,13 +228,24 @@ public class SimpleHero : InteractableHero {
 		m_stateMachine.AddExit (HeroState.StrategyDirection, delegate {
 			((CustomStrategy)m_strategy).isActive = true;	
 			LogicArg arg = new LogicArg(this);
-			Debug.Log("Fire Confirm Move ");
+//			Debug.Log("Fire Confirm Move ");
 			M_Event.FireLogicEvent(LogicEvents.ConfirmMove , arg );
 		});
 
 		m_stateMachine.AddEnter (HeroState.StrategyConfirm, delegate {
 			BattleField.ResetVisualColor( true );
 			TemBlock.linkedBlock.visualType = BattleBlock.BlockVisualType.StrategyConfirm;
+		});
+
+		m_stateMachine.AddEnter (HeroState.StrategyAuto, delegate() {
+			// set up the strategy
+			if (!( m_strategy is AIStrategy) ) {
+				DestroyImmediate(m_strategy);
+				m_strategy = gameObject.AddComponent<AIStrategy>();
+				m_strategy.Init(this);
+				m_strategy.OnBeforeBattle();
+			}
+
 		});
 
 		m_stateMachine.AddEnter (HeroState.BattleMove, delegate {
@@ -297,10 +315,17 @@ public class SimpleHero : InteractableHero {
 		M_Event.UnRegisterAll (OnEvent);
 	}
 
+
 	protected override void MUpdate ()
 	{
 		base.MUpdate ();
 		m_stateMachine.Update ();
+	}
+
+	public override void BeginBattle ()
+	{
+		base.BeginBattle ();
+		m_stateMachine.State = HeroState.BattleBegin;
 	}
 
 	public override float BattleMove ()

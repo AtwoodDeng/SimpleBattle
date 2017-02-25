@@ -3,6 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Strategy : HeroComponent {
+	public virtual bool IsReady()
+	{
+		return true;
+	}
+
+	public virtual void OnBeforeBattle()
+	{
+	}
 
 	public virtual void OnBeginBattle()
 	{
